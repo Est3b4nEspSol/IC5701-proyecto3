@@ -166,7 +166,6 @@ MultiCommentEnd = "э"
 
     /* Operadores Aritmeticos */
     "+"         { return symbol(sym.PLUS); }
-    "-" [0-9]   { /* Capturado por DecIntegerLiteral  */ }
     "-"         { return symbol(sym.MINUS); }
     "*"         { return symbol(sym.MULTIPLY); }
     "/"         { return symbol(sym.DIVIDE); }
@@ -194,8 +193,6 @@ MultiCommentEnd = "э"
     "!"         { return symbol(sym.RBRACE); }
     "¿"         { return symbol(sym.LPAREN); }
     "?"         { return symbol(sym.RPAREN); }
-    "["         { return symbol(sym.LBRACKET); }
-    "]"         { return symbol(sym.RBRACKET); }
 
     /* Puntuación */
     ","         { return symbol(sym.COMMA); }
