@@ -38,7 +38,7 @@ terminal
     AND, OR, NOT,
 
     /* Delimitadores */
-    LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET,
+    LBRACE, RBRACE, LPAREN, RPAREN,
 
     /* Puntuación */
     COMMA, SEMI, COLON, DOT, ASSIGN, ARROW,
@@ -47,6 +47,7 @@ terminal
     ERROR;
 
 /* regla vacía solo para que CUP funcione */
+
 non terminal programa;
 start with programa;
 programa ::= ;
