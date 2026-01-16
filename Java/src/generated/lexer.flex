@@ -10,6 +10,7 @@ import java_cup.runtime.*;
 %column
 
 %state STRING_CONTENT
+%state CHAR_CONTENT
 %state MULTI_COMMENT
 
 %{
@@ -34,7 +35,6 @@ WhiteSpace = {LineTerminator} | [ \t\f]
 
 /* Literales */
 digit = [0-9]
-digitoNoCero = [1-9]
 sign = [-]?
 DecIntegerLiteral = {sign}({digit}+|{digit}+"."+{digit}+)
 
@@ -43,9 +43,6 @@ Identifier = [:jletter:] ([:jletterdigit:]|"_")*
 
 /* Comentarios */
 LineComment = "|" [^\r\n]*
-MultiCommentStart = "є"
-MultiCommentEnd = "э"
-
 %%
 
 /* Estado de contenido de string */
@@ -66,6 +63,8 @@ MultiCommentEnd = "э"
     \\t  { string.append('\t'); }
     \\n  { string.append('\n'); }
     \\r  { string.append('\r'); }
+    \\b  { string.append('\b'); }
+    \\f  { string.append('\f'); }
 
     /* ERROR: Newline no escapado */
     \n|\r|\r\n {
@@ -90,21 +89,77 @@ MultiCommentEnd = "э"
     }
 }
 
-/* Estado Comentario Multilinea */
+/* Estado de contenido de char */
+<CHAR_CONTENT> {
+    \' {
+        // Carácter simple
+        if (string.length() == 1) {
+            yybegin(YYINITIAL);
+            return symbol(sym.CHAR_LITERAL, string.toString().charAt(0));
+        } else {
+            reportError("Literal de carácter inválido: debe contener exactamente un carácter");
+            yybegin(YYINITIAL);
+            return symbol(sym.ERROR);
+        }
+    }
+
+    /* Secuencias de escape válidas */
+    \\\' { string.append('\''); }
+    \\\\ { string.append('\\'); }
+    \\t  { string.append('\t'); }
+    \\n  { string.append('\n'); }
+    \\r  { string.append('\r'); }
+    \\\" { string.append('\"'); }
+    \\b  { string.append('\b'); }
+    \\f  { string.append('\f'); }
+
+    /* Carácter normal */
+    [^\\\'\n\r] {
+        string.append(yytext());
+    }
+
+    /* ERROR: Newline no escapado */
+    \n|\r|\r\n {
+        reportError("Newline no escapado en literal de carácter");
+        yybegin(YYINITIAL);
+        return symbol(sym.ERROR);
+    }
+
+    /* ERROR: Secuencia de escape inválida */
+    \\. {
+        reportError("Secuencia de escape inválida '\\" + yytext().charAt(1) +
+                   "' en literal de carácter");
+        yybegin(YYINITIAL);
+        return symbol(sym.ERROR);
+    }
+
+    /* ERROR: Carácter no cerrado */
+    <<EOF>> {
+        reportError("Literal de carácter no cerrado");
+        yybegin(YYINITIAL);
+        return symbol(sym.ERROR, "Carácter no cerrado");
+    }
+}
+
+<YYINITIAL> {
+    "є" {
+        yybegin(MULTI_COMMENT);
+    }
+}
+
 <MULTI_COMMENT> {
-    {MultiCommentEnd} {
+    "э" {
         yybegin(YYINITIAL);
     }
 
-    [^э]+ {
-        /* Ignorar contenido de comentario */
+    [^] {
+
     }
 
-    /* ERROR: Comentario no cerrado */
     <<EOF>> {
         reportError("Comentario multilínea no cerrado");
         yybegin(YYINITIAL);
-        return symbol(sym.ERROR);
+        return symbol(sym.EOF);
     }
 }
 
@@ -205,10 +260,6 @@ MultiCommentEnd = "э"
     /* Comentarios */
     {LineComment} {
         /* Ignorar comentarios de una linea */
-    }
-
-    {MultiCommentStart} {
-        yybegin(MULTI_COMMENT);
     }
 
     /* Espacios en Blanco */
