@@ -1,7 +1,4 @@
-import generated.Lexer;
-import generated.sym;
 import java_cup.internal_error;
-import java_cup.parser;
 import java_cup.runtime.Symbol;
 import jflex.exceptions.SilentExit;
 
@@ -31,7 +28,7 @@ public class MainJFlexCup {
 
     public void prueba(String rutaScanear) throws IOException {
         Reader reader = new BufferedReader(new FileReader(rutaScanear));
-        Lexer lex = new Lexer(reader);
+        generated.Lexer lex = new generated.Lexer(reader);
         Symbol token;
         BufferedWriter writer = null;
 
@@ -49,7 +46,7 @@ public class MainJFlexCup {
             while (true) {
                 token = lex.next_token();
 
-                if (token.sym == sym.EOF) {
+                if (token.sym == generated.sym.EOF) {
                     break;
                 }
 

@@ -35,7 +35,7 @@ token: 53 lexema: [ Línea: 9 Columna: 9
 token: 54 lexema: ] Línea: 9 Columna: 11
 token: 55 lexema: , Línea: 11 Columna: 1
 token: 56 lexema: ; Línea: 11 Columna: 3
-token: 57 lexema: : Línea: 11 Columna: 5
-token: 58 lexema: . Línea: 11 Columna: 7
-token: 59 lexema: = Línea: 11 Columna: 9
-token: 60 lexema: -> Línea: 11 Columna: 11
+token: 59 lexema: : Línea: 11 Columna: 5
+token: 59 lexema: . Línea: 11 Columna: 7
+token: 57 lexema: = Línea: 11 Columna: 9
+token: 58 lexema: -> Línea: 11 Columna: 11

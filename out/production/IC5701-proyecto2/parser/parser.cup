@@ -1,20 +1,12 @@
 package generated;
 import java_cup.runtime.*;
 
-
 parser code {:
-
-    // Connect this parser to a scanner!
     Lexer lex;
     parser(Lexer lex){ this.lex=lex; }
 :}
 
-    /* define how to connect to the scanner! */
-    init with {: :};
-    scan with {: return lex.next_token();
-:};
-
-/* Terminales  */
+/* Terminales (sin UMINUS) */
 terminal
     /* Palabras Reservadas */
     WORLD, LOCAL, DECIDE, OF, ELSE, END, LOOP, EXIT, WHEN, FOR, GIFT,
@@ -41,12 +33,166 @@ terminal
     LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET,
 
     /* Puntuación */
-    COMMA, SEMI, COLON, DOT, ASSIGN, ARROW,
+    COMMA, SEMI, ASSIGN, ARROW,
 
-    /* Especiales */
+    /* error */
     ERROR;
 
-/* regla vacía solo para que CUP funcione */
-non terminal programa;
-start with programa;
-programa ::= ;
+/* No terminales */
+non terminal program, functionList, mainFunction, functionDecl;
+non terminal type, statement, statementList, block, expression, exprTerm;
+non terminal paramList, param, arrayDecl, arrayAccess, returnStmt;
+non terminal varDecl, assignStmt, showStmt, getStmt, ifStmt, loopStmt, forStmt;
+non terminal condition, conditionList, elsePart, arrayLiteral, arrayElements;
+non terminal dimensions, access1D, access2D;
+
+/* Precedencia (sin UMINUS) */
+precedence left OR;
+precedence left AND;
+precedence left EQUAL, NOT_EQUAL;
+precedence left LESS, LESS_EQUAL, GREATER, GREATER_EQUAL;
+precedence left PLUS, MINUS;
+precedence left MULTIPLY, DIVIDE, INT_DIV, MODULO;
+precedence right POWER;
+precedence right INCREMENT, DECREMENT;
+precedence right NOT;
+
+/* Regla de inicio */
+start with program;
+
+/* ============ PRODUCCIONES ============ */
+
+/* 1. PROGRAMA */
+program ::= functionList mainFunction;
+
+/* 2. FUNCIÓN PRINCIPAL */
+mainFunction ::= COAL NAVIDAD block;
+
+/* 3. LISTA DE FUNCIONES */
+functionList ::= /* vacío */
+                | functionList functionDecl;
+
+/* 4. DECLARACIÓN DE FUNCIÓN */
+functionDecl ::= GIFT type IDENTIFIER LPAREN paramList RPAREN block returnStmt;
+
+/* 5. LISTA DE PARÁMETROS */
+paramList ::= /* vacío */
+             | param
+             | paramList COMMA param;
+
+param ::= type IDENTIFIER;
+
+/* 6. TIPOS */
+type ::= INT
+       | FLOAT
+       | BOOL
+       | CHAR
+       | STRING;
+
+/* 7. BLOQUE */
+block ::= LBRACE statementList RBRACE;
+
+/* 8. LISTA DE SENTENCIAS */
+statementList ::= /* vacío */
+                 | statementList statement;
+
+/* 9. SENTENCIAS */
+statement ::= varDecl
+            | assignStmt
+            | showStmt
+            | getStmt
+            | ifStmt
+            | loopStmt
+            | forStmt
+            | returnStmt
+            | BREAK ENDL;
+
+/* 10. DECLARACIÓN DE VARIABLE */
+varDecl ::= LOCAL type IDENTIFIER ENDL
+          | LOCAL type IDENTIFIER ASSIGN expression ENDL
+          | WORLD type IDENTIFIER ENDL
+          | WORLD type IDENTIFIER ASSIGN expression ENDL
+          | arrayDecl;
+
+/* 11. DECLARACIÓN DE ARRAY */
+arrayDecl ::= type IDENTIFIER dimensions ENDL
+            | type IDENTIFIER dimensions ASSIGN arrayLiteral ENDL;
+
+dimensions ::= LBRACKET LITERAL_INTEGER RBRACKET LBRACKET LITERAL_INTEGER RBRACKET
+             | LBRACKET RBRACKET LBRACKET RBRACKET;
+
+/* 12. LITERAL DE ARRAY */
+arrayLiteral ::= LBRACE LBRACE arrayElements RBRACE COMMA LBRACE arrayElements RBRACE RBRACE
+               | LBRACE arrayElements RBRACE;
+
+arrayElements ::= expression
+                | arrayElements COMMA expression;
+
+/* 13. ASIGNACIÓN */
+assignStmt ::= IDENTIFIER ASSIGN expression ENDL
+             | arrayAccess ASSIGN expression ENDL;
+
+/* 14. ACCESO A ARRAY */
+access1D ::= IDENTIFIER LBRACKET expression RBRACKET;
+access2D ::= access1D LBRACKET expression RBRACKET;
+arrayAccess ::= access1D | access2D;
+
+/* 15. SHOW */
+showStmt ::= SHOW LPAREN expression RPAREN ENDL;
+
+/* 16. GET */
+getStmt ::= GET LPAREN RPAREN ENDL;
+
+/* 17. DECIDE OF */
+ifStmt ::= DECIDE OF conditionList elsePart END DECIDE ENDL;
+
+conditionList ::= condition
+                | conditionList condition;
+
+condition ::= expression ARROW block;
+
+elsePart ::= /* vacío */
+           | ELSE ARROW block;
+
+/* 18. LOOP */
+loopStmt ::= LOOP statementList EXIT WHEN expression ENDL END LOOP ENDL;
+
+/* 19. FOR */
+forStmt ::= FOR LPAREN varDecl expression SEMI expression block;
+
+/* 20. RETURN */
+returnStmt ::= RETURN expression ENDL;
+
+/* 21. TÉRMINOS DE EXPRESIÓN */
+exprTerm ::= LITERAL_INTEGER
+           | LITERAL_FLOAT
+           | BOOL_LITERAL
+           | CHAR_LITERAL
+           | STRING_LITERAL
+           | IDENTIFIER
+           | arrayAccess
+           | GET LPAREN RPAREN
+           | LPAREN expression RPAREN;
+
+/* 22. EXPRESIÓN (con precedencia implícita) */
+expression ::= exprTerm
+             | MINUS expression                    /* Negativo unario */
+             | NOT expression                      /* Negación lógica */
+             | INCREMENT expression                /* Pre-incremento */
+             | DECREMENT expression                /* Pre-decremento */
+             | expression POWER expression         /* Mayor precedencia */
+             | expression MULTIPLY expression
+             | expression DIVIDE expression
+             | expression INT_DIV expression
+             | expression MODULO expression
+             | expression PLUS expression
+             | expression MINUS expression
+             | expression LESS expression
+             | expression LESS_EQUAL expression
+             | expression GREATER expression
+             | expression GREATER_EQUAL expression
+             | expression EQUAL expression
+             | expression NOT_EQUAL expression
+             | expression AND expression
+             | expression OR expression;
+
