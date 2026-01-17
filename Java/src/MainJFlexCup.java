@@ -1,3 +1,4 @@
+
 import java_cup.internal_error;
 import java_cup.runtime.Symbol;
 import jflex.exceptions.SilentExit;
@@ -76,6 +77,18 @@ public class MainJFlexCup {
             } catch (IOException ignored) {
             }
         }
+    }
+
+    public void pruebaParser(String rutaScanear) throws Exception{
+        Reader reader = new BufferedReader(new FileReader(rutaScanear));
+
+        generated.Lexer lexer = new generated.Lexer(reader);
+        generated.parser parser = new generated.parser(lexer);
+
+        parser.parse();
+
+        System.out.println("\\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\\n");
+        parser.getSymTable().print();
     }
 
     public static void main(String[] args) throws Exception {

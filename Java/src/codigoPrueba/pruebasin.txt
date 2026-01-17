@@ -1,0 +1,5 @@
+WORLD INT x;
+LOCAL INT y;
+GIFT INT suma(INT a, INT b) {
+    RETURN a + b;
+}

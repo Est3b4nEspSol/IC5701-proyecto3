@@ -6,10 +6,10 @@ import java.util.Scanner;
 
 public class App {
     private static final Scanner scanner = new Scanner(System.in); // inicializamos un scanner general (modo singleton) para evitar problemas
+    static final MainJFlexCup mfjc = new MainJFlexCup();
 
     public static void GenerarLexerParser() throws Exception{
         String basePath, fullPathLexer, fullPathparser, jlexer, jparser, jlexerCarpeta; // se crean variables para el manejo de archivos
-        MainJFlexCup mfjc = new MainJFlexCup();
 
         basePath = System.getProperty("user.dir"); //camino base para prácticamente todo lo que hacemos
 
@@ -36,7 +36,6 @@ public class App {
 
     public static void PruebasLexerParser() throws Exception{ // como su nombre indica, con este método hacemos pruebas
         String basePath, fullPathScanner, nombre; // se crean variables para trabajar después
-        MainJFlexCup mfjc = new MainJFlexCup();
 
         basePath = System.getProperty("user.dir"); // inicializamos el camino base de los archivos
 
@@ -59,6 +58,30 @@ public class App {
         mfjc.prueba(fullPathScanner); // aquí es donde trabajamos con los tokens
     }
 
+    public static void PruebaSintactica() throws Exception{ // como su nombre indica, con este método hacemos pruebas
+        String basePath, fullPathScanner, nombre; // se crean variables para trabajar después
+
+        basePath = System.getProperty("user.dir"); // inicializamos el camino base de los archivos
+
+        // esta sección es bastante autoexplicativa leyendo  los sout, pero se centra en
+        // pedir el nombre del archivo en el que vamos a utilizar el analizador léxico.
+        while(true){
+            System.out.println("Indicar nombre del archivo (en la carpeta codigoPrueba) en formato .txt (sin agregar .txt al final): ");
+            nombre = scanner.nextLine();
+            fullPathScanner = basePath + "\\Java\\src\\codigoPrueba\\" + nombre +".txt";
+
+            File archivo = new File(fullPathScanner);
+
+            if (!archivo.exists()) {
+                System.out.println("El archivo '" + nombre + ".txt' no existe, ingrese uno que se encuentre en la carpeta codigoPrueba de la carpeta src");
+            }
+            else{
+                break;
+            }
+        }
+        mfjc.pruebaParser(fullPathScanner); // aquí es donde trabajamos con los tokens
+    }
+
     public static void main(String[] args) throws Exception{
         int opcion = 0;
 
@@ -66,8 +89,9 @@ public class App {
             System.out.println("=================================");
             System.out.println("Seleccione una opción:");
             System.out.println("1. Generar parser");
-            System.out.println("2. Probar analizador");
-            System.out.println("3. Salir");
+            System.out.println("2. Probar analizador léxico");
+            System.out.println("3. Probar analizador sintáctico");
+            System.out.println("4. Salir");
             System.out.print("Opción: ");
 
             String input = scanner.nextLine(); // leer línea completa
@@ -89,6 +113,9 @@ public class App {
                     PruebasLexerParser();
                     break;
                 case 3:
+                    PruebaSintactica();
+                    break;
+                case 4:
                     System.out.println("Saliendo del programa...");
                     break;
                 default:
