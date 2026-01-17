@@ -48,7 +48,7 @@ terminal
 non terminal program, functionList, mainFunction, functionDecl;
 non terminal type, statement, statementList, block, expression, exprTerm;
 non terminal paramList, param, arrayDecl, arrayAccess, returnStmt;
-non terminal varDecl, assignStmt, showStmt, getStmt, ifStmt, loopStmt, forStmt;
+non terminal varDecl, assignStmt, showStmt, getStmt, ifStmt, loopStmt, forStmt, forVarDec;
 non terminal condition, conditionList, elsePart, arrayLiteral, arrayElements;
 non terminal dimensions, access1D, access2D;
 
@@ -287,7 +287,19 @@ elsePart ::= /* vacío */
 loopStmt ::= LOOP statementList EXIT WHEN expression ENDL END LOOP ENDL;
 
 /* 19. FOR */
-forStmt ::= FOR LPAREN varDecl expression ENDL expression RPAREN block;
+forStmt ::= FOR LPAREN forVarDec expression ENDL expression RPAREN block;
+forVarDec ::= type IDENTIFIER:id ASSIGN expression ENDL
+                  {:
+                     symtab.insert(
+                         new SymInfo(
+                             (String) id,
+                             SymKind.LOCAL_VAR,
+                             idleft,
+                             idright
+                         )
+                     );
+                  :};
+
 
 /* 20. RETURN */
 returnStmt ::= RETURN expression ENDL;
