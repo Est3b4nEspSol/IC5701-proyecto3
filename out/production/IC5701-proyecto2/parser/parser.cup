@@ -39,7 +39,7 @@ terminal
     LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET,
 
     /* Puntuación */
-    COMMA, SEMI, ASSIGN, ARROW,
+    COMMA, ASSIGN, ARROW,
 
     /* error */
     ERROR;
@@ -69,11 +69,7 @@ start with program;
 /* ============ PRODUCCIONES ============ */
 
 /* 1. PROGRAMA */
-program ::= functionList mainFunction
-{:
-    symtab.print();
-:};
-
+program ::= statementList functionList mainFunction;
 
 /* 2. FUNCIÓN PRINCIPAL */
 mainFunction ::= COAL NAVIDAD block;
@@ -84,17 +80,17 @@ functionList ::= /* vacío */
 
 /* 4. DECLARACIÓN DE FUNCIÓN */
 functionDecl ::=
-    GIFT type IDENTIFIER:id
+    GIFT type IDENTIFIER
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.FUNCTION,
-                sym.left,
-                sym.right
-            )
-        );
+        Symbol id = (Symbol) $3;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.FUNCTION,
+                    id.left,
+                    id.right
+                )
+            );
         symtab.enterScope();
     :}
     LPAREN paramList RPAREN block returnStmt
@@ -107,17 +103,17 @@ paramList ::= /* vacío */
              | param
              | paramList COMMA param;
 
-param ::= type IDENTIFIER:id
+param ::= type IDENTIFIER
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.PARAM,
-                sym.left,
-                sym.right
-            )
-        );
+        Symbol id = (Symbol) $2;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.PARAM,
+                    id.left,
+                    id.right
+                )
+            );
     :};
 
 
@@ -142,7 +138,7 @@ block ::= LBRACE
 
 /* 8. LISTA DE SENTENCIAS */
 statementList ::= /* vacío */
-                 | statementList statement ENDL;
+                 | statementList statement;
 
 /* 9. SENTENCIAS */
 statement ::= varDecl
@@ -156,106 +152,106 @@ statement ::= varDecl
             | BREAK;
 
 /* 10. DECLARACIÓN DE VARIABLE */
-varDecl ::= LOCAL type IDENTIFIER:id ENDL
+varDecl ::= LOCAL type IDENTIFIER ENDL
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.LOCAL_VAR,
-                sym.left,
-                sym.right
-            )
-        );
+        Symbol id = (Symbol) $3;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.LOCAL_VAR,
+                    id.left,
+                    id.right
+                )
+            );
     :}
-    | LOCAL type IDENTIFIER:id ASSIGN expression ENDL
+    | LOCAL type IDENTIFIER ASSIGN expression ENDL
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.LOCAL_VAR,
-                sym.left,
-                sym.right
-            )
-        );
+       Symbol id = (Symbol) $3;
+           symtab.insert(
+               new SymInfo(
+                   (String) id.value,
+                   SymKind.LOCAL_VAR,
+                   id.left,
+                   id.right
+               )
+           );
     :}
-    | WORLD type IDENTIFIER:id ENDL
+    | WORLD type IDENTIFIER ENDL
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.GLOBAL_VAR,
-                sym.left,
-                sym.right
-            )
-        );
+        Symbol id = (Symbol) $3;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.GLOBAL_VAR,
+                    id.left,
+                    id.right
+                )
+            );
     :}
-    | WORLD type IDENTIFIER:id ASSIGN expression ENDL
+    | WORLD type IDENTIFIER ASSIGN expression ENDL
     {:
-        Symbol sym = (Symbol) id;
-        symtab.insert(
-            new SymInfo(
-                (String) sym.value,
-                SymKind.GLOBAL_VAR,
-                sym.left,
-                sym.right
-            )
-        );
+        Symbol id = (Symbol) $3;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.GLOBAL_VAR,
+                    id.left,
+                    id.right
+                )
+            );
     :};
 
 
 
 /* 11. DECLARACIÓN DE ARRAY */
 arrayDecl ::=
-      LOCAL type IDENTIFIER:id dimensions ENDL
+      LOCAL type IDENTIFIER dimensions ENDL
       {:
-          Symbol sym = (Symbol) id;
-          symtab.insert(
-              new SymInfo(
-                  (String) sym.value,
-                  SymKind.LOCAL_VAR,
-                  sym.left,
-                  sym.right
-              )
-          );
+          Symbol id = (Symbol) $3;
+              symtab.insert(
+                  new SymInfo(
+                      (String) id.value,
+                      SymKind.LOCAL_ARRAY,
+                      id.left,
+                      id.right
+                  )
+              );
       :}
-    | LOCAL type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
+    | LOCAL type IDENTIFIER dimensions ASSIGN arrayLiteral ENDL
       {:
-          Symbol sym = (Symbol) id;
-          symtab.insert(
-              new SymInfo(
-                  (String) sym.value,
-                  SymKind.LOCAL_VAR,
-                  sym.left,
-                  sym.right
-              )
-          );
+          Symbol id = (Symbol) $3;
+                symtab.insert(
+                    new SymInfo(
+                        (String) id.value,
+                        SymKind.LOCAL_ARRAY,
+                        id.left,
+                        id.right
+                    )
+                );
       :}
-    | WORLD type IDENTIFIER:id dimensions ENDL
+    | WORLD type IDENTIFIER dimensions ENDL
       {:
-          Symbol sym = (Symbol) id;
-          symtab.insert(
-              new SymInfo(
-                  (String) sym.value,
-                  SymKind.GLOBAL_VAR,
-                  sym.left,
-                  sym.right
-              )
-          );
+          Symbol id = (Symbol) $3;
+              symtab.insert(
+                  new SymInfo(
+                      (String) id.value,
+                      SymKind.GLOBAL_ARRAY,
+                      id.left,
+                      id.right
+                  )
+              );
       :}
-    | WORLD type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
+    | WORLD type IDENTIFIER dimensions ASSIGN arrayLiteral ENDL
       {:
-          Symbol sym = (Symbol) id;
-          symtab.insert(
-              new SymInfo(
-                  (String) sym.value,
-                  SymKind.GLOBAL_VAR,
-                  sym.left,
-                  sym.right
-              )
-          );
+          Symbol id = (Symbol) $3;
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.GLOBAL_ARRAY,
+                    id.left,
+                    id.right
+                )
+            );
       :};
 
 
