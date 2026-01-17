@@ -19,7 +19,6 @@ public class sym {
   public static final int CHAR = 23;
   public static final int CHAR_LITERAL = 28;
   public static final int NOT_EQUAL = 45;
-  public static final int SEMI = 56;
   public static final int LPAREN = 51;
   public static final int GREATER = 42;
   public static final int INT = 20;
@@ -43,7 +42,7 @@ public class sym {
   public static final int PLUS = 31;
   public static final int MULTIPLY = 33;
   public static final int EXIT = 9;
-  public static final int ASSIGN = 57;
+  public static final int ASSIGN = 56;
   public static final int OF = 5;
   public static final int EOF = 0;
   public static final int RETURN = 17;
@@ -54,9 +53,9 @@ public class sym {
   public static final int MODULO = 36;
   public static final int BREAK = 18;
   public static final int WORLD = 2;
-  public static final int ERROR = 59;
+  public static final int ERROR = 58;
   public static final int LITERAL_FLOAT = 26;
-  public static final int ARROW = 58;
+  public static final int ARROW = 57;
   public static final int LBRACE = 49;
   public static final int ELSE = 6;
   public static final int FLOAT = 21;
@@ -125,7 +124,6 @@ public class sym {
   "LBRACKET",
   "RBRACKET",
   "COMMA",
-  "SEMI",
   "ASSIGN",
   "ARROW",
   "ERROR"

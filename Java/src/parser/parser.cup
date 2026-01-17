@@ -69,10 +69,7 @@ start with program;
 /* ============ PRODUCCIONES ============ */
 
 /* 1. PROGRAMA */
-program ::= | premain | premain mainFunction;
-
-preprogram ::=  | statementList functionList | functionList statementList | statementList | functionList;
-premain ::= preprogram | premain preprogram;
+program ::= statementList functionList mainFunction;
 
 /* 2. FUNCIÓN PRINCIPAL */
 mainFunction ::= COAL NAVIDAD block;
@@ -144,6 +141,7 @@ statementList ::= /* vacío */
 
 /* 9. SENTENCIAS */
 statement ::= varDecl
+            | arrayDecl
             | assignStmt
             | showStmt
             | getStmt
@@ -167,39 +165,36 @@ varDecl ::= LOCAL type IDENTIFIER:id ENDL
     :}
     | LOCAL type IDENTIFIER:id ASSIGN expression ENDL
     {:
-       Symbol id = (Symbol) $3;
-           symtab.insert(
-               new SymInfo(
-                   (String) id.value,
-                   SymKind.LOCAL_VAR,
-                   id.left,
-                   id.right
-               )
-           );
+       symtab.insert(
+           new SymInfo(
+               (String) id.value,
+               SymKind.LOCAL_VAR,
+               id.left,
+               id.right
+           )
+       );
     :}
     | WORLD type IDENTIFIER:id ENDL
     {:
-        Symbol id = (Symbol) $3;
-            symtab.insert(
-                new SymInfo(
-                    (String) id.value,
-                    SymKind.GLOBAL_VAR,
-                    id.left,
-                    id.right
-                )
-            );
-    :}
+        symtab.insert(
+            new SymInfo(
+                (String) id.value,
+                SymKind.GLOBAL_VAR,
+                id.left,
+                id.right
+            )
+        );
+:}
     | WORLD type IDENTIFIER:id ASSIGN expression ENDL
     {:
-        Symbol id = (Symbol) $3;
-            symtab.insert(
-                new SymInfo(
-                    (String) id.value,
-                    SymKind.GLOBAL_VAR,
-                    id.left,
-                    id.right
-                )
-            );
+        symtab.insert(
+            new SymInfo(
+                (String) id.value,
+                SymKind.GLOBAL_VAR,
+                id.left,
+                id.right
+            )
+        );
     :};
 
 
@@ -208,43 +203,39 @@ varDecl ::= LOCAL type IDENTIFIER:id ENDL
 arrayDecl ::=
       LOCAL type IDENTIFIER:id dimensions ENDL
       {:
-          Symbol id = (Symbol) $3;
-              symtab.insert(
-                  new SymInfo(
-                      (String) id.value,
-                      SymKind.LOCAL_ARRAY,
-                      id.left,
-                      id.right
-                  )
-              );
+          symtab.insert(
+              new SymInfo(
+                  (String) id.value,
+                  SymKind.LOCAL_ARRAY,
+                  id.left,
+                  id.right
+              )
+          );
       :}
     | LOCAL type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
       {:
-          Symbol id = (Symbol) $3;
-                symtab.insert(
-                    new SymInfo(
-                        (String) id.value,
-                        SymKind.LOCAL_ARRAY,
-                        id.left,
-                        id.right
-                    )
-                );
+            symtab.insert(
+                new SymInfo(
+                    (String) id.value,
+                    SymKind.LOCAL_ARRAY,
+                    id.left,
+                    id.right
+                )
+            );
       :}
     | WORLD type IDENTIFIER:id dimensions ENDL
       {:
-          Symbol id = (Symbol) $3;
-              symtab.insert(
-                  new SymInfo(
-                      (String) id.value,
-                      SymKind.GLOBAL_ARRAY,
-                      id.left,
-                      id.right
-                  )
-              );
+          symtab.insert(
+              new SymInfo(
+                  (String) id.value,
+                  SymKind.GLOBAL_ARRAY,
+                  id.left,
+                  id.right
+              )
+          );
       :}
     | WORLD type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
       {:
-          Symbol id = (Symbol) $3;
             symtab.insert(
                 new SymInfo(
                     (String) id.value,

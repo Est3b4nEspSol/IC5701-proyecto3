@@ -3,6 +3,12 @@ import java_cup.runtime.*;
 
 parser code {:
     Lexer lex;
+    SymTable symtab = new SymTable();
+
+    public SymTable getSymTable() {
+            return symtab;
+        }
+
     parser(Lexer lex){ this.lex=lex; }
 :}
 
@@ -33,7 +39,10 @@ terminal
     LBRACE, RBRACE, LPAREN, RPAREN, LBRACKET, RBRACKET,
 
     /* Puntuación */
-    COMMA, SEMI, ASSIGN, ARROW;
+    COMMA, SEMI, ASSIGN, ARROW,
+
+    /* error */
+    ERROR;
 
 /* No terminales */
 non terminal program, functionList, mainFunction, functionDecl;
@@ -60,7 +69,11 @@ start with program;
 /* ============ PRODUCCIONES ============ */
 
 /* 1. PROGRAMA */
-program ::= functionList mainFunction;
+program ::= functionList mainFunction
+{:
+    symtab.print();
+:};
+
 
 /* 2. FUNCIÓN PRINCIPAL */
 mainFunction ::= COAL NAVIDAD block;
@@ -70,14 +83,43 @@ functionList ::= /* vacío */
                 | functionList functionDecl;
 
 /* 4. DECLARACIÓN DE FUNCIÓN */
-functionDecl ::= GIFT type IDENTIFIER LPAREN paramList RPAREN block returnStmt;
+functionDecl ::=
+    GIFT type IDENTIFIER:id
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.FUNCTION,
+                sym.left,
+                sym.right
+            )
+        );
+        symtab.enterScope();
+    :}
+    LPAREN paramList RPAREN block returnStmt
+    {:
+        symtab.exitScope();
+    :};
 
 /* 5. LISTA DE PARÁMETROS */
 paramList ::= /* vacío */
              | param
              | paramList COMMA param;
 
-param ::= type IDENTIFIER;
+param ::= type IDENTIFIER:id
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.PARAM,
+                sym.left,
+                sym.right
+            )
+        );
+    :};
+
 
 /* 6. TIPOS */
 type ::= INT
@@ -87,11 +129,20 @@ type ::= INT
        | STRING;
 
 /* 7. BLOQUE */
-block ::= LBRACE statementList RBRACE;
+block ::= LBRACE
+    {:
+        symtab.enterScope();
+    :}
+    statementList
+    RBRACE
+    {:
+        symtab.exitScope();
+    :};
+
 
 /* 8. LISTA DE SENTENCIAS */
 statementList ::= /* vacío */
-                 | statementList statement;
+                 | statementList statement ENDL;
 
 /* 9. SENTENCIAS */
 statement ::= varDecl
@@ -102,18 +153,111 @@ statement ::= varDecl
             | loopStmt
             | forStmt
             | returnStmt
-            | BREAK SEMI;
+            | BREAK;
 
 /* 10. DECLARACIÓN DE VARIABLE */
-varDecl ::= LOCAL type IDENTIFIER SEMI
-          | LOCAL type IDENTIFIER ASSIGN expression ENDL
-          | WORLD type IDENTIFIER SEMI
-          | WORLD type IDENTIFIER ASSIGN expression ENDL
-          | arrayDecl;
+varDecl ::= LOCAL type IDENTIFIER:id ENDL
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.LOCAL_VAR,
+                sym.left,
+                sym.right
+            )
+        );
+    :}
+    | LOCAL type IDENTIFIER:id ASSIGN expression ENDL
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.LOCAL_VAR,
+                sym.left,
+                sym.right
+            )
+        );
+    :}
+    | WORLD type IDENTIFIER:id ENDL
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.GLOBAL_VAR,
+                sym.left,
+                sym.right
+            )
+        );
+    :}
+    | WORLD type IDENTIFIER:id ASSIGN expression ENDL
+    {:
+        Symbol sym = (Symbol) id;
+        symtab.insert(
+            new SymInfo(
+                (String) sym.value,
+                SymKind.GLOBAL_VAR,
+                sym.left,
+                sym.right
+            )
+        );
+    :};
+
+
 
 /* 11. DECLARACIÓN DE ARRAY */
-arrayDecl ::= type IDENTIFIER dimensions SEMI
-            | type IDENTIFIER dimensions ASSIGN arrayLiteral SEMI;
+arrayDecl ::=
+      LOCAL type IDENTIFIER:id dimensions ENDL
+      {:
+          Symbol sym = (Symbol) id;
+          symtab.insert(
+              new SymInfo(
+                  (String) sym.value,
+                  SymKind.LOCAL_VAR,
+                  sym.left,
+                  sym.right
+              )
+          );
+      :}
+    | LOCAL type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
+      {:
+          Symbol sym = (Symbol) id;
+          symtab.insert(
+              new SymInfo(
+                  (String) sym.value,
+                  SymKind.LOCAL_VAR,
+                  sym.left,
+                  sym.right
+              )
+          );
+      :}
+    | WORLD type IDENTIFIER:id dimensions ENDL
+      {:
+          Symbol sym = (Symbol) id;
+          symtab.insert(
+              new SymInfo(
+                  (String) sym.value,
+                  SymKind.GLOBAL_VAR,
+                  sym.left,
+                  sym.right
+              )
+          );
+      :}
+    | WORLD type IDENTIFIER:id dimensions ASSIGN arrayLiteral ENDL
+      {:
+          Symbol sym = (Symbol) id;
+          symtab.insert(
+              new SymInfo(
+                  (String) sym.value,
+                  SymKind.GLOBAL_VAR,
+                  sym.left,
+                  sym.right
+              )
+          );
+      :};
+
 
 dimensions ::= LBRACKET LITERAL_INTEGER RBRACKET LBRACKET LITERAL_INTEGER RBRACKET
              | LBRACKET RBRACKET LBRACKET RBRACKET;
@@ -126,8 +270,8 @@ arrayElements ::= expression
                 | arrayElements COMMA expression;
 
 /* 13. ASIGNACIÓN */
-assignStmt ::= IDENTIFIER ASSIGN expression SEMI
-             | arrayAccess ASSIGN expression SEMI;
+assignStmt ::= IDENTIFIER ASSIGN expression ENDL
+             | arrayAccess ASSIGN expression ENDL;
 
 /* 14. ACCESO A ARRAY */
 access1D ::= IDENTIFIER LBRACKET expression RBRACKET;
@@ -135,10 +279,10 @@ access2D ::= access1D LBRACKET expression RBRACKET;
 arrayAccess ::= access1D | access2D;
 
 /* 15. SHOW */
-showStmt ::= SHOW LPAREN expression RPAREN SEMI;
+showStmt ::= SHOW LPAREN expression RPAREN ENDL;
 
 /* 16. GET */
-getStmt ::= GET LPAREN RPAREN SEMI;
+getStmt ::= GET LPAREN RPAREN ENDL;
 
 /* 17. DECIDE OF */
 ifStmt ::= DECIDE OF conditionList elsePart END DECIDE ENDL;
@@ -155,10 +299,10 @@ elsePart ::= /* vacío */
 loopStmt ::= LOOP statementList EXIT WHEN expression ENDL END LOOP ENDL;
 
 /* 19. FOR */
-forStmt ::= FOR varDecl expression SEMI expression block;
+forStmt ::= FOR LPAREN varDecl expression ENDL expression RPAREN block;
 
 /* 20. RETURN */
-returnStmt ::= RETURN expression SEMI;
+returnStmt ::= RETURN expression ENDL;
 
 /* 21. TÉRMINOS DE EXPRESIÓN */
 exprTerm ::= LITERAL_INTEGER
@@ -177,8 +321,6 @@ expression ::= exprTerm
              | NOT expression                      /* Negación lógica */
              | INCREMENT expression                /* Pre-incremento */
              | DECREMENT expression                /* Pre-decremento */
-             | expression INCREMENT                /* Post-incremento */
-             | expression DECREMENT                /* Post-decremento */
              | expression POWER expression         /* Mayor precedencia */
              | expression MULTIPLY expression
              | expression DIVIDE expression
@@ -194,3 +336,4 @@ expression ::= exprTerm
              | expression NOT_EQUAL expression
              | expression AND expression
              | expression OR expression;
+

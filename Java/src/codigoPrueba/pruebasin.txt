@@ -1,5 +1,7 @@
-WORLD INT x;
-LOCAL INT y;
-GIFT INT suma(INT a, INT b) {
-    RETURN a + b;
-}
+world string sasdf endl |comentario linea###
+
+є !@#$$%^& multilinea
+  э
+
+coal navidad ¡
+!
