@@ -253,7 +253,6 @@ LineComment = "|" [^\r\n]*
 
     /* Puntuación */
     ","         { return symbol(sym.COMMA); }
-    ";"         { return symbol(sym.SEMI); }
     "="         { return symbol(sym.ASSIGN); }
     "->"        { return symbol(sym.ARROW); }
 
