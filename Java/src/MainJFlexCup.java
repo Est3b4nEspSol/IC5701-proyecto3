@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.io.*;
+import Sintactico.*;
 
 public class MainJFlexCup {
 
@@ -89,6 +90,13 @@ public class MainJFlexCup {
 
         System.out.println("\\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\\n");
         parser.getSymTable().print();
+        //Comentado para cuando ya este listo en cup el arbol sintactico
+        /*arbolSintactico arbol = parser.getArbolSintactico();
+        if (arbol != null) {
+            arbol.print();  // ¡Mismo método que SymTable!
+        } else {
+            System.out.println("No disponible.");
+        }*/
     }
 
     public static void main(String[] args) throws Exception {

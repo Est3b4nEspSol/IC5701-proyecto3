@@ -1,9 +1,16 @@
 package generated;
 import java_cup.runtime.*;
+import Sintactico.*;
 
 parser code {:
     Lexer lex;
     SymTable symtab = new SymTable();
+    ArbolSintactico arbol;
+
+
+    public ArbolSintactico getArbolSintactico() {
+        return arbol;
+    }
 
     public SymTable getSymTable() {
             return symtab;

@@ -6,6 +6,7 @@
 package generated;
 
 import java_cup.runtime.*;
+import Sintactico.*;
 import java_cup.runtime.XMLElement;
 
 /** CUP v0.11b 20160615 (GIT 4ac7450) generated parser.
@@ -546,6 +547,12 @@ public class parser extends java_cup.runtime.lr_parser {
 
     Lexer lex;
     SymTable symtab = new SymTable();
+    ArbolSintactico arbol;
+
+
+    public ArbolSintactico getArbolSintactico() {
+        return arbol;
+    }
 
     public SymTable getSymTable() {
             return symtab;
