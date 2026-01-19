@@ -1,0 +1,8 @@
+world int x = 5 endl
+local int bomboclat = 2 endl
+
+gift int fun1 ¿ ? ¡
+    local int ñaskldfj = 43 endl
+    return 5 endl !
+
+
