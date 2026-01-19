@@ -22,17 +22,11 @@ public class SymTable {
         scopes.peek().put(sym.name, sym);
     }
 
-    public SymInfo lookup(String name) {
-        for (int i = scopes.size() - 1; i >= 0; i--) {
-            SymInfo s = scopes.get(i).get(name);
-            if (s != null) return s;
-        }
-        return null;
-    }
 
     public void print() {
         System.out.println("===== TABLA DE SÍMBOLOS (SINTÁCTICA) =====");
         for (Map<String, SymInfo> scope : scopes) {
+            System.out.println(scope);
             for (SymInfo s : scope.values()) {
                 System.out.println(s);
             }

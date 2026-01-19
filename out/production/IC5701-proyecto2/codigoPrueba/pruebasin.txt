@@ -1,6 +1,7 @@
 world string sasdf endl |comentario linea###
 
 world int arreglopa[][] = ¡¡1!,¡2!! endl
+
 coal navidad ¡
       local int x = 5 endl
       show¿x? endl

@@ -27,6 +27,7 @@ enum SymKind {
     LOCAL_VAR,
     GLOBAL_VAR,
     GLOBAL_ARRAY,
-    LOCAL_ARRAY
+    LOCAL_ARRAY,
+    MAIN
 }
 

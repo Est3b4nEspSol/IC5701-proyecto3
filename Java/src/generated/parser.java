@@ -793,7 +793,6 @@ class CUP$parser$actions {
         resultado.addHijo(new Nodo("¿"));
 
         Nodo plNodo = (Nodo)pl;
-        // Extraer todos los parámetros excepto los paréntesis
         for (Nodo hijo : plNodo.hijos) {
             if (!hijo.lexema.equals("¿") && !hijo.lexema.equals("?")) {
                 resultado.addHijo(hijo);
@@ -923,11 +922,9 @@ class CUP$parser$actions {
         Nodo resultado = new Nodo("block");
         resultado.addHijo(new Nodo("¡"));
 
-        // CAST seguro con verificación de null
         if (sl != null) {
             resultado.addHijo((Nodo)sl);
         } else {
-            // Si sl es null, crear lista vacía
             Nodo emptyList = new Nodo("statementList");
             resultado.addHijo(emptyList);
         }

@@ -612,7 +612,17 @@ ifStmt ::= DECIDE OF conditionList:cl elsePart:ep END DECIDE ENDL
         resultado.addHijo(new Nodo("decide"));
         resultado.addHijo(new Nodo("endl"));
         RESULT = resultado;
-    :};
+    :} |
+    DECIDE OF conditionList:cl END DECIDE ENDL
+        {:
+            Nodo resultado = new Nodo("decideOf");
+            resultado.addHijo(new Nodo("decide"));
+            resultado.addHijo(new Nodo("of"));
+            resultado.addHijo((Nodo)cl);
+            resultado.addHijo(new Nodo("decide"));
+            resultado.addHijo(new Nodo("endl"));
+            RESULT = resultado;
+        :};
 
 /* 21. LISTA DE CONDICIONES */
 conditionList ::= condition:c

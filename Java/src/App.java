@@ -79,6 +79,7 @@ public class App {
                 break;
             }
         }
+
         mfjc.pruebaParser(fullPathScanner); // aquí es donde trabajamos con los tokens
     }
 
