@@ -166,12 +166,39 @@ functionDecl ::=
               RESULT = resultado;
           :};
 
-funcall ::= IDENTIFIER LPAREN arglist RPAREN;
-
+funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
+    {:
+        Nodo resultado = new Nodo("funcall");
+        Nodo idNode = new Nodo(id.toString());
+        resultado.addHijo(idNode);
+        resultado.addHijo(new Nodo("¿"));
+        resultado.addHijo((Nodo)al);
+        resultado.addHijo(new Nodo("?"));
+        RESULT = resultado;
+    :};
 arglist ::=
-      /* vacío */
-    | arglist COMMA expression
-    | expression;
+    {:
+        Nodo resultado = new Nodo("arglist");
+        RESULT = resultado;
+    :}
+    | expression:e
+    {:
+        Nodo resultado = new Nodo("arglist");
+        resultado.addHijo((Nodo)e);
+        RESULT = resultado;
+    :}
+    | arglist:al COMMA expression:e
+    {:
+        Nodo resultado = new Nodo("arglist");
+        Nodo alNodo = (Nodo)al;
+        for (Nodo hijo : alNodo.hijos) {
+            resultado.addHijo(hijo);
+        }
+        resultado.addHijo(new Nodo(","));
+        resultado.addHijo((Nodo)e);
+        RESULT = resultado;
+    :};
+
 /* 5. LISTA DE PARÁMETROS */
 paramList ::=
     {:
@@ -787,7 +814,11 @@ exprTerm ::= LITERAL_INTEGER:lit
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("?"));
         RESULT = resultado;
-    :} | funcall;
+    :}
+    | funcall:fc
+   {:
+       RESULT = fc;
+   :};
 
 /* 29. EXPRESIÓN */
 expression ::= exprTerm:et
