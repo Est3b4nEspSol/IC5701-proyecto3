@@ -2,10 +2,12 @@ package generated;
 
 import java.util.*;
 
+
+
 public class SymTable {
 
     private Stack<Map<String, SymInfo>> scopes = new Stack<>();
-
+    private ArrayList<Map<String, SymInfo>> todo = new ArrayList<>() ;
     public SymTable() {
         enterScope(); // ámbito global
     }
@@ -15,7 +17,7 @@ public class SymTable {
     }
 
     public void exitScope() {
-        scopes.pop();
+        todo.add(scopes.pop());
     }
 
     public void insert(SymInfo sym) {
@@ -26,8 +28,12 @@ public class SymTable {
     public void print() {
         System.out.println("===== TABLA DE SÍMBOLOS (SINTÁCTICA) =====");
         for (Map<String, SymInfo> scope : scopes) {
-            System.out.println(scope);
             for (SymInfo s : scope.values()) {
+                System.out.println(s);
+            }
+        }
+        for (Map<String, SymInfo> bicho : todo) {
+            for (SymInfo s : bicho.values()) {
                 System.out.println(s);
             }
         }

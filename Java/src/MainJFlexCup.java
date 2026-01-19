@@ -88,15 +88,15 @@ public class MainJFlexCup {
 
         parser.parse();
 
-        System.out.println("\\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\\n");
-        parser.getSymTable().print();
-        //Comentado para cuando ya este listo en cup el arbol sintactico
-        /*arbolSintactico arbol = parser.getArbolSintactico();
+        ArbolSintactico arbol = parser.getArbolSintactico();
         if (arbol != null) {
-            arbol.print();  // ¡Mismo método que SymTable!
+            arbol.print();
         } else {
             System.out.println("No disponible.");
-        }*/
+        }
+        System.out.println("\\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\\n");
+        parser.getSymTable().print();
+
     }
 
     public static void main(String[] args) throws Exception {

@@ -18,7 +18,7 @@ gift float _mi_  ¿ int _dif_, char _otra_ ? ¡
 		end loop endl
 
 		decide   of
-		¿ false @ 3>4 ~ 4*5 > 5 + g % 4 + 2 ?  ->
+		¿ false @ 3>4 ~ 4*5 > 5 + g % 4 + fun ¿ 2, 3 ? ?  ->
 		 ¡
 			show ¿ "entra al if" ?  endl
 			!
@@ -35,7 +35,7 @@ gift float _mi_  ¿ int _dif_, char _otra_ ? ¡
 					show ¿ "!|" ?  endl  !
 				_otra_ == 2 -> ¡
 					_otra_ = 10 endl
-					break endl  !
+					break endl !
 				else -> ¡
 					_otra_ = -10.5 * -1.9 endl  !
 			end  decide   endl
@@ -45,6 +45,6 @@ gift float _mi_  ¿ int _dif_, char _otra_ ? ¡
 	return 1 endl
   !
 
- coal  navidad  ¿  ?   ¡
+coal  navidad ¿ ? ¡
 	return -5.6 endl
   !

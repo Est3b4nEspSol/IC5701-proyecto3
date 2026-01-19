@@ -28,6 +28,6 @@ enum SymKind {
     GLOBAL_VAR,
     GLOBAL_ARRAY,
     LOCAL_ARRAY,
-    MAIN
+    FOR_VAR
 }
 

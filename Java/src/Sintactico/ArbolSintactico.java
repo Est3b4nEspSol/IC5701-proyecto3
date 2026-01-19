@@ -40,9 +40,9 @@ public class ArbolSintactico {
                     System.out.println(indent + "\t" + hijo.lexema);
                 }
             }
-        } else {
+        } /*else {
             System.out.println(indent + "Nodo: " + nodo.lexema);
-        }
+        }*/
 
         // Recursivamente imprimir hijos
         if (nodo.hijos != null) {

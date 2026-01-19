@@ -117,15 +117,15 @@ mainFunction ::= COAL NAVIDAD block:b
         resultado.addHijo(new Nodo("navidad"));
         resultado.addHijo((Nodo)b);
         RESULT = resultado;
-    :} |
-    COAL NAVIDAD LPAREN RPAREN block:b
-    {:
-        Nodo resultado = new Nodo("mainFunction");
-        resultado.addHijo(new Nodo("coal"));
-        resultado.addHijo(new Nodo("navidad"));
-        resultado.addHijo((Nodo)b);
-        RESULT = resultado;
-    :};
+    :}
+    | COAL NAVIDAD LPAREN RPAREN block:b
+          {:
+              Nodo resultado = new Nodo("mainFunction");
+              resultado.addHijo(new Nodo("coal"));
+              resultado.addHijo(new Nodo("navidad"));
+              resultado.addHijo((Nodo)b);
+              RESULT = resultado;
+          :};
 
 /* 3. LISTA DE FUNCIONES */
 functionList ::=
@@ -165,13 +165,6 @@ functionDecl ::=
 
               RESULT = resultado;
           :};
-
-funcall ::= IDENTIFIER LPAREN arglist RPAREN;
-
-arglist ::=
-      /* vacío */
-    | arglist COMMA expression
-    | expression;
 /* 5. LISTA DE PARÁMETROS */
 paramList ::=
     {:
@@ -205,6 +198,13 @@ paramList ::=
         resultado.addHijo(new Nodo("?"));
         RESULT = resultado;
     :};
+
+funcall ::= IDENTIFIER LPAREN arglist RPAREN;
+
+arglist ::=
+      /* vacío */
+    | arglist COMMA expression
+    | expression;
 
 /* 6. PARÁMETRO */
 param ::= type:t IDENTIFIER:id
@@ -345,13 +345,17 @@ statement ::= varDecl:vd
         resultado.addHijo((Nodo)rs);
         RESULT = resultado;
     :}
+    | funcall ENDL
+    {:
+        Nodo resultado = new Nodo("statement");
+        RESULT = resultado;
+    :}
     | BREAK ENDL
     {:
         Nodo resultado = new Nodo("statement");
         resultado.addHijo(new Nodo("break"));
         RESULT = resultado;
-    :}
-    | funcall ENDL;
+    :};
 
 /* 11. DECLARACIÓN DE VARIABLE */
 varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
@@ -714,7 +718,7 @@ forVarDec ::= type:t IDENTIFIER:id ASSIGN expression:e ENDL
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.FOR_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, SymKind.LOCAL_VAR, idleft, idright));
         RESULT = resultado;
     :};
 
@@ -782,7 +786,12 @@ exprTerm ::= LITERAL_INTEGER:lit
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("?"));
         RESULT = resultado;
-    :} | funcall;
+    :}
+    | funcall
+    {:
+        Nodo resultado = new Nodo("funcall");
+        RESULT = resultado;
+    :};
 
 /* 29. EXPRESIÓN */
 expression ::= exprTerm:et
