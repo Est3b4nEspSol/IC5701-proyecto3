@@ -80,23 +80,31 @@ public class MainJFlexCup {
         }
     }
 
-    public void pruebaParser(String rutaScanear) throws Exception{
+    public void pruebaParser(String rutaScanear) throws Exception {
         Reader reader = new BufferedReader(new FileReader(rutaScanear));
-
         generated.Lexer lexer = new generated.Lexer(reader);
         generated.parser parser = new generated.parser(lexer);
 
         parser.parse();
 
-        System.out.println("\\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\\n");
-        parser.getSymTable().print();
-        //Comentado para cuando ya este listo en cup el arbol sintactico
-        /*arbolSintactico arbol = parser.getArbolSintactico();
+        System.out.println("\n=== ANÁLISIS SINTÁCTICO COMPLETADO ===\n");
+
+        // Primero el árbol (que sabemos que funciona)
+        System.out.println("=== ÁRBOL SINTÁCTICO ===");
+        ArbolSintactico arbol = parser.getArbolSintactico();
         if (arbol != null) {
-            arbol.print();  // ¡Mismo método que SymTable!
-        } else {
-            System.out.println("No disponible.");
-        }*/
+            arbol.print();
+        }
+
+        // Luego intentar la tabla de símbolos (separado)
+        System.out.println("\n=== TABLA DE SÍMBOLOS ===");
+        try {
+            parser.getSymTable().print();
+        } catch (NullPointerException e) {
+            System.out.println("Tabla de símbolos no disponible (null)");
+        } catch (Exception e) {
+            System.out.println("Error al imprimir tabla: " + e.getMessage());
+        }
     }
 
     public static void main(String[] args) throws Exception {
