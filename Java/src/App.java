@@ -8,7 +8,7 @@ public class App {
     private static final Scanner scanner = new Scanner(System.in); // inicializamos un scanner general (modo singleton) para evitar problemas
     static final MainJFlexCup mfjc = new MainJFlexCup();
 
-    public static void GenerarLexerParser() throws Exception{
+    public static void GenerarLexerParser() throws Exception {
         String basePath, fullPathLexer, fullPathparser, jlexer, jparser, jlexerCarpeta; // se crean variables para el manejo de archivos
 
         basePath = System.getProperty("user.dir"); //camino base para prácticamente todo lo que hacemos

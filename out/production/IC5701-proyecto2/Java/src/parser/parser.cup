@@ -17,17 +17,17 @@ parser code {:
 
     public int getErrorCount() { return errorCount; }
 
-        public void syntax_error(Symbol cur_token) {
-            errorCount++;
-            System.err.println("ERROR SINTÁCTICO (Línea " + (cur_token.left + 1) +
-                              ", Columna " + (cur_token.right + 1) + "): " +
-                              "Token inesperado '" + cur_token.value + "'");
+    public void syntax_error(Symbol cur_token) {
+        errorCount++;
+        System.err.println("ERROR SINTÁCTICO (Línea " + (cur_token.left + 1) +
+                          ", Columna " + (cur_token.right + 1) + "): " +
+                          "Token inesperado '" + cur_token.value + "'");
 
-        }
+    }
 
-        public void unrecovered_syntax_error(Symbol cur_token) {
-            System.err.println("ERROR SINTÁCTICO IRRECUPERABLE - finalizando análisis");
-        }
+    public void unrecovered_syntax_error(Symbol cur_token) {
+        System.err.println("ERROR SINTÁCTICO IRRECUPERABLE - finalizando análisis");
+    }
 
     parser(Lexer lex){
             this.lex=lex;
@@ -69,11 +69,13 @@ terminal
 
 /* No terminales */
 non terminal program, functionList, mainFunction, functionDecl, arglist, funcall;
-non terminal type, statement, statementList, block, expression, exprTerm, uniop, op;
+non terminal type, statement, statementList, block, expression, exprTerm;
+non terminal logicalExpression, unaryExpression, relationalExpression, additiveExpression,
+             multiplicativeExpression, powerExpression;
 non terminal paramList, param, arrayDecl, arrayAccess, returnStmt;
 non terminal varDecl, assignStmt, showStmt, getStmt, ifStmt, loopStmt, forStmt, forVarDec;
 non terminal condition, conditionList, elsePart, arrayLiteral, arrayElements;
-non terminal dimensions, access1D, access2D;
+non terminal dimensions;
 
 /* Precedencia */
 precedence left OR;
@@ -161,7 +163,7 @@ functionDecl ::=
               resultado.addHijo(new Nodo("?"));
               resultado.addHijo((Nodo)b);
 
-              symtab.insert(new SymInfo((String)id, SymKind.FUNCTION, idleft, idright));
+              symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.FUNCTION, idleft, idright));
 
               RESULT = resultado;
           :};
@@ -243,7 +245,7 @@ param ::= type:t IDENTIFIER:id
         idNode.setTipo(((Nodo)t).getTipo());
         resultado.addHijo(idNode);
 
-        symtab.insert(new SymInfo((String)id, SymKind.PARAM, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.PARAM, idleft, idright));
         RESULT = resultado;
     :};
 
@@ -397,7 +399,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.LOCAL_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_VAR, idleft, idright));
         RESULT = resultado;
     :}
     | LOCAL type:t IDENTIFIER:id ASSIGN expression:e ENDL
@@ -413,7 +415,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.LOCAL_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_VAR, idleft, idright));
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id ENDL
@@ -427,7 +429,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.GLOBAL_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_VAR, idleft, idright));
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id ASSIGN expression:e ENDL
@@ -443,7 +445,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.GLOBAL_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_VAR, idleft, idright));
         RESULT = resultado;
     :};
 
@@ -460,7 +462,7 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)d);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.LOCAL_ARRAY, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_ARRAY, idleft, idright));
         RESULT = resultado;
     :}
     | LOCAL type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -477,7 +479,7 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)al);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.LOCAL_ARRAY, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_ARRAY, idleft, idright));
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ENDL
@@ -492,7 +494,7 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)d);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.GLOBAL_ARRAY, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(), SymKind.GLOBAL_ARRAY, idleft, idright));
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -509,7 +511,7 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)al);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.GLOBAL_ARRAY, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_ARRAY, idleft, idright));
         RESULT = resultado;
     :};
 
@@ -596,34 +598,18 @@ assignStmt ::= IDENTIFIER:id ASSIGN expression:e ENDL
     :};
 
 /* 17. ACCESO A ARRAY */
-access1D ::= IDENTIFIER:id LBRACKET expression:e RBRACKET
-    {:
-        Nodo resultado = new Nodo("access1D");
-        resultado.addHijo(new Nodo(id.toString()));
-        resultado.addHijo(new Nodo("["));
-        resultado.addHijo((Nodo)e);
-        resultado.addHijo(new Nodo("]"));
-        RESULT = resultado;
-    :};
-
-access2D ::= access1D:ad LBRACKET expression:e RBRACKET
-    {:
-        Nodo resultado = new Nodo("access2D");
-        resultado.addHijo((Nodo)ad);
-        resultado.addHijo(new Nodo("["));
-        resultado.addHijo((Nodo)e);
-        resultado.addHijo(new Nodo("]"));
-        RESULT = resultado;
-    :};
-
-arrayAccess ::= access1D:a1d
-    {:
-        RESULT = a1d;
-    :}
-    | access2D:a2d
-    {:
-        RESULT = a2d;
-    :};
+arrayAccess ::= IDENTIFIER:id LBRACKET expression:e1 RBRACKET LBRACKET expression:e2 RBRACKET
+        {:
+            Nodo resultado = new Nodo("access");
+            resultado.addHijo(new Nodo(id.toString()));
+            resultado.addHijo(new Nodo("["));
+            resultado.addHijo((Nodo)e1);
+            resultado.addHijo(new Nodo("]"));
+            resultado.addHijo(new Nodo("["));
+            resultado.addHijo((Nodo)e2);
+            resultado.addHijo(new Nodo("]"));
+            RESULT = resultado;
+        :};
 
 /* 18. SHOW */
 showStmt ::= SHOW LPAREN expression:e RPAREN ENDL
@@ -746,7 +732,7 @@ forVarDec ::= type:t IDENTIFIER:id ASSIGN expression:e ENDL
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, SymKind.FOR_VAR, idleft, idright));
+        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.FOR_VAR, idleft, idright));
         RESULT = resultado;
     :};
 
@@ -821,117 +807,181 @@ exprTerm ::= LITERAL_INTEGER:lit
    :};
 
 /* 29. EXPRESIÓN */
-expression ::= exprTerm:et
+/* Expresión lógica */
+expression ::= logicalExpression:le
     {:
-        RESULT = et;
+        RESULT = le;
+    :};
+
+/* Expresiones lógicas: OR, AND */
+logicalExpression ::= relationalExpression:re
+    {:
+        RESULT = re;
     :}
-    | uniop:u expression:e
+    | logicalExpression:le OR relationalExpression:re
     {:
-        Nodo resultado = (Nodo)u;
-        resultado.addHijo((Nodo)e);
+        Nodo resultado = new Nodo("~");  // OR
+        resultado.addHijo((Nodo)le);
+        resultado.addHijo((Nodo)re);
         RESULT = resultado;
     :}
-    | expression:e1 op:oper expression:e2
+    | logicalExpression:le AND relationalExpression:re
     {:
-        Nodo resultado = (Nodo)oper;
-        resultado.addHijo((Nodo)e1);
-        resultado.addHijo((Nodo)e2);
+        Nodo resultado = new Nodo("@");  // AND
+        resultado.addHijo((Nodo)le);
+        resultado.addHijo((Nodo)re);
         RESULT = resultado;
     :};
 
-uniop ::= MINUS
+/* Expresiones relacionales */
+relationalExpression ::= additiveExpression:ae
     {:
-        Nodo resultado = new Nodo("minus");
-        RESULT = resultado;
+        RESULT = ae;
     :}
-    | NOT
-    {:
-        Nodo resultado = new Nodo("not");
-        RESULT = resultado;
-    :}
-    | INCREMENT
-    {:
-        Nodo resultado = new Nodo("increment");
-        RESULT = resultado;
-    :}
-    | DECREMENT
-    {:
-        Nodo resultado = new Nodo("decrement");
-        RESULT = resultado;
-    :};
-
-op ::= POWER
-    {:
-        Nodo resultado = new Nodo("^");
-        RESULT = resultado;
-    :}
-    | MULTIPLY
-    {:
-        Nodo resultado = new Nodo("*");
-        RESULT = resultado;
-    :}
-    | DIVIDE
-    {:
-        Nodo resultado = new Nodo("/");
-        RESULT = resultado;
-    :}
-    | INT_DIV
-    {:
-        Nodo resultado = new Nodo("//");
-        RESULT = resultado;
-    :}
-    | MODULO
-    {:
-        Nodo resultado = new Nodo("%");
-        RESULT = resultado;
-    :}
-    | PLUS
-    {:
-        Nodo resultado = new Nodo("+");
-        RESULT = resultado;
-    :}
-    | MINUS
-    {:
-        Nodo resultado = new Nodo("-");
-        RESULT = resultado;
-    :}
-    | LESS
-    {:
-        Nodo resultado = new Nodo("<");
-        RESULT = resultado;
-    :}
-    | LESS_EQUAL
-    {:
-        Nodo resultado = new Nodo("<=");
-        RESULT = resultado;
-    :}
-    | GREATER
-    {:
-        Nodo resultado = new Nodo(">");
-        RESULT = resultado;
-    :}
-    | GREATER_EQUAL
-    {:
-        Nodo resultado = new Nodo(">=");
-        RESULT = resultado;
-    :}
-    | EQUAL
+    | additiveExpression:ae1 EQUAL additiveExpression:ae2
     {:
         Nodo resultado = new Nodo("==");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
         RESULT = resultado;
     :}
-    | NOT_EQUAL
+    | additiveExpression:ae1 NOT_EQUAL additiveExpression:ae2
     {:
         Nodo resultado = new Nodo("!=");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
         RESULT = resultado;
     :}
-    | AND
+    | additiveExpression:ae1 LESS additiveExpression:ae2
     {:
-        Nodo resultado = new Nodo("@");
+        Nodo resultado = new Nodo("<");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
         RESULT = resultado;
     :}
-    | OR
+    | additiveExpression:ae1 LESS_EQUAL additiveExpression:ae2
     {:
-        Nodo resultado = new Nodo("~");
+        Nodo resultado = new Nodo("<=");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
+        RESULT = resultado;
+    :}
+    | additiveExpression:ae1 GREATER additiveExpression:ae2
+    {:
+        Nodo resultado = new Nodo(">");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
+        RESULT = resultado;
+    :}
+    | additiveExpression:ae1 GREATER_EQUAL additiveExpression:ae2
+    {:
+        Nodo resultado = new Nodo(">=");
+        resultado.addHijo((Nodo)ae1);
+        resultado.addHijo((Nodo)ae2);
         RESULT = resultado;
     :};
+
+/* Expresiones aritméticas */
+additiveExpression ::= multiplicativeExpression:me
+    {:
+        RESULT = me;
+    :}
+    | additiveExpression:ae PLUS multiplicativeExpression:me
+    {:
+        Nodo resultado = new Nodo("+");
+        resultado.addHijo((Nodo)ae);
+        resultado.addHijo((Nodo)me);
+        RESULT = resultado;
+    :}
+    | additiveExpression:ae MINUS multiplicativeExpression:me
+    {:
+        Nodo resultado = new Nodo("-");
+        resultado.addHijo((Nodo)ae);
+        resultado.addHijo((Nodo)me);
+        RESULT = resultado;
+    :};
+
+
+multiplicativeExpression ::= powerExpression:pe
+    {:
+        RESULT = pe;
+    :}
+    | multiplicativeExpression:me MULTIPLY powerExpression:pe
+    {:
+        Nodo resultado = new Nodo("*");
+        resultado.addHijo((Nodo)me);
+        resultado.addHijo((Nodo)pe);
+        RESULT = resultado;
+    :}
+    | multiplicativeExpression:me DIVIDE powerExpression:pe
+    {:
+        Nodo resultado = new Nodo("/");
+        resultado.addHijo((Nodo)me);
+        resultado.addHijo((Nodo)pe);
+        RESULT = resultado;
+    :}
+    | multiplicativeExpression:me INT_DIV powerExpression:pe
+    {:
+        Nodo resultado = new Nodo("//");
+        resultado.addHijo((Nodo)me);
+        resultado.addHijo((Nodo)pe);
+        RESULT = resultado;
+    :}
+    | multiplicativeExpression:me MODULO powerExpression:pe
+    {:
+        Nodo resultado = new Nodo("%");
+        resultado.addHijo((Nodo)me);
+        resultado.addHijo((Nodo)pe);
+        RESULT = resultado;
+    :};
+
+
+powerExpression ::= unaryExpression:ue
+    {:
+        RESULT = ue;
+    :}
+    | unaryExpression:ue POWER powerExpression:pe
+    {:
+        Nodo resultado = new Nodo("^");
+        resultado.addHijo((Nodo)ue);
+        resultado.addHijo((Nodo)pe);
+        RESULT = resultado;
+    :};
+
+/* Expresiones unarias */
+negative ::= MINUS unaryExpression:ue
+                 {:
+                     Nodo resultado = new Nodo("minus");
+                     resultado.addHijo((Nodo)ue);
+                     RESULT = resultado;
+                 :};
+
+unaryExpression ::= exprTerm:et
+    {:
+        RESULT =et;
+    :}
+    | MINUS unaryExpression:ue
+    {:
+        Nodo resultado = new Nodo("minus");
+        resultado.addHijo((Nodo)ue);
+        RESULT = resultado;
+    :}
+    | NOT unaryExpression:ue
+    {:
+        Nodo resultado = new Nodo("not");
+        resultado.addHijo((Nodo)ue);
+        RESULT = resultado;
+    :}
+    | INCREMENT unaryExpression:ue
+    {:
+        Nodo resultado = new Nodo("increment");
+        resultado.addHijo((Nodo)ue);
+        RESULT = resultado;
+    :}
+    | DECREMENT unaryExpression:ue
+    {:
+        Nodo resultado = new Nodo("decrement");
+        resultado.addHijo((Nodo)ue);
+        RESULT = resultado;
+    :};
+
