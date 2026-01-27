@@ -52,6 +52,7 @@ LineComment = "|" [^\r\n]*
         return symbol(sym.STRING_LITERAL, string.toString());
     }
 
+
     /* Caracteres normales */
     [^\n\r\"\\]+ {
         string.append(yytext());
@@ -210,14 +211,15 @@ LineComment = "|" [^\r\n]*
         string.setLength(0);
         yybegin(STRING_CONTENT);
     }
+    \' {
+        string.setLength(0);
+        yybegin(CHAR_CONTENT);
+    }
 
     "true"      { return symbol(sym.BOOL_LITERAL, Boolean.TRUE); }
     "false"     { return symbol(sym.BOOL_LITERAL, Boolean.FALSE); }
 
-    /* Identificadores */
-    {Identifier} {
-        return symbol(sym.IDENTIFIER, yytext());
-    }
+
 
     /* Operadores Aritmeticos */
     "+"         { return symbol(sym.PLUS); }
@@ -255,6 +257,11 @@ LineComment = "|" [^\r\n]*
     ","         { return symbol(sym.COMMA); }
     "="         { return symbol(sym.ASSIGN); }
     "->"        { return symbol(sym.ARROW); }
+
+    /* Identificadores */
+    {Identifier} {
+        return symbol(sym.IDENTIFIER, yytext());
+    }
 
     /* Comentarios */
     {LineComment} {
