@@ -20,6 +20,10 @@ public class SymTable {
         todo.add(scopes.pop());
     }
 
+    public Map<String, SymInfo> currentScope(){
+        return new HashMap<>();
+    }
+
     public void insert(SymInfo sym) {
         scopes.peek().put(sym.name, sym);
     }
