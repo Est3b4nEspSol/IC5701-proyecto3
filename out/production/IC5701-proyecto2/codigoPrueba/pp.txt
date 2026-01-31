@@ -1,0 +1,63 @@
+world string _s1_ endl |comentario linea###
+world bool flag = true endl
+
+є !@#$$%^& multilinea
+  э
+
+| Declarar la función func que faltaba
+gift int func ¿ int a, int b ? ¡
+    return a + b endl
+!
+
+world bool flager = true endl
+
+gift float _mi_ ¿ int _dif_, char _otra_ ? ¡
+    local int _otra_ endl
+    local int miArr[2][2] endl
+    local int miArr2[2][2] = ¡¡1,2!,¡3,4!! endl
+    local int x = 10 endl
+    local string _str_="Hola  endl ~&|! endl & ?  mundo" endl
+
+    for ¿ int i = 0 endl i < 10 endl ++i ? ¡
+       loop
+          local int _var_2 = 1 endl
+          local int _var_ = _var_2 - 1 endl
+          exit when _var_2 > 12 @ 12 > 34 endl
+       end loop endl
+
+       local int g = 10 endl
+
+       decide of
+          false @ ¿3 > 4? ~ ¿4*5 > 5 + g % 4 + func¿ 2, 3 ?? -> ¡
+             show ¿ "entra al if" ? endl
+          !
+       end decide endl
+
+       decide of
+          true -> ¡
+             show ¿ _var_ ? endl
+          !
+          else -> ¡
+             decide of
+                _otra_ == 1 -> ¡
+                   show ¿ "!|" ? endl
+                !
+                _otra_ == 2 -> ¡
+                   _otra_ = 10 endl
+                   break endl
+                !
+                else -> ¡
+                   | _otra_ = -10.5 * -1.9 endl
+                   _otra_ = 5 endl
+                !
+             end decide endl
+          !
+       end decide endl
+    !
+
+    return 1.0 endl
+!
+
+coal navidad ¿ ? ¡
+    show ¿ "Hola mundo" ? endl
+!

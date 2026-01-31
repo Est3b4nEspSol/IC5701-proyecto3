@@ -1,11 +1,18 @@
 package generated;
 
- class SymInfo {
+import java.util.ArrayList;
+import java.util.List;
+
+class SymInfo {
     public String name;
     public String type;
     public SymKind kind;
     public int line;
     public int column;
+
+    public int offset;          // Desplazamiento en la pila
+    public int paramCount;      // Número de parámetros (para funciones)
+    public List<String> paramTypes; // Tipos de parámetros
 
     public SymInfo(String name, String type, SymKind kind, int line, int column) {
         this.name = name;
@@ -13,6 +20,9 @@ package generated;
         this.kind = kind;
         this.line = line;
         this.column = column;
+        this.offset = 0;
+        this.paramCount = 0;
+        this.paramTypes = new ArrayList<>();
     }
 
     @Override

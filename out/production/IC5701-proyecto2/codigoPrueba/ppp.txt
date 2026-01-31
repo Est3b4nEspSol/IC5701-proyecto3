@@ -1,0 +1,30 @@
+coal navidad ¿ ? ¡
+    local int a = 10 endl
+    local bool b = true endl
+    local string s = "hola" endl
+
+    | ERROR: sumar int con bool
+    local int error1 = a + b endl
+
+    | ERROR: multiplicar string
+    local string error2 = s * a endl
+
+    | ERROR: división entera con float
+    local float x = 10.5 endl
+    local int error3 = a // x endl
+
+    | ERROR: módulo con float
+    local float error4 = x % 2.5 endl
+
+    | ERROR: potencia con float
+    local int error5 = 2 ^ x endl
+
+    | ERROR: operador lógico con int
+    local bool error6 = a @ b endl
+
+    | ERROR: NOT con int
+    local bool error7 = Σa endl
+
+    | ERROR: comparación < con bool
+    local bool error8 = b < true endl
+!
