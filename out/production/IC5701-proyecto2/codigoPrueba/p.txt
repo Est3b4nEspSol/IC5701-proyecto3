@@ -1,24 +1,48 @@
-world int x = 5 endl
-local int bomboclat = 2 endl
+coal navidad ¿ ? ¡
+    local int a = 10 endl
+    local int b = 20 endl
+    local int c = 5 endl
+    local float d = 6.2 endl
+    local float e = 6 endl
+    local string hola = "prueba" endl
 
-gift int fun1 ¿ ? ¡
-    local int ñaskldfj = 43 endl
-    return 5 endl !
+    | Operaciones aritméticas
+    local int suma = a + b + c endl
+    local int resta = b - a - c endl
+    local int mult = a * b * 2 endl
+    local int divEntera = 2 // 3 endl
+    local int modulo = d % a endl
+    local int potencia = d ^ 3 endl
 
-gift int fun2 ¿ ? ¡
-    local int ñaskldfj = 43 endl
-    return 5 endl !
+    | Operaciones con float
+    local float x = 10.5 endl
+    local float y = 2.5 endl
+    local float divFloat = x / y  endl
+    local float multFloat = x * y endl
 
-coal navidad ¡
-      local int x = 5 endl
-      local int y = -x endl
-      local int z = ++x endl
+    | Operaciones relacionales
+    local bool mayor = "hola" > 'h' endl
+    local bool menor = a < b endl
+    local bool igual = a == b endl
+    local bool diferente = a != b endl
+    local bool mayorIgual = a >= c endl
+    local bool menorIgual = c <= a endl
 
-      local bool b1 = true endl
+    | Operaciones lógicas
+    local bool andResult = ¿a > 0? @ ¿b > 0? endl
+    local bool orResult = ¿a > 100? ~ ¿b < 100? endl
+    local bool notResult = Σ ¿a == b? endl
 
-      local int resultado = ¿5 * ¿2 + 3? ? endl
+    | Operaciones unarias
+    local int negativo = -a endl
+    local int incremento = ++a endl
+    local int decremento = --b endl
 
-      show¿y? endl
-      show¿z? endl
-      show¿resultado? endl
+    | Expresiones complejas con paréntesis
+    local int complejo1 = ¿a + b? * ¿c - 2? endl
+    local bool complejo2 = ¿¿a > 0? @ ¿b < 100?? ~ ¿c == 5? endl
+
+    show ¿ suma ? endl
+    show ¿ divFloat ? endl
+    show ¿ andResult ? endl
 !
