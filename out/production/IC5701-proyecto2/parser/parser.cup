@@ -6,6 +6,9 @@ parser code {:
     Lexer lex;
     SymTable symtab = new SymTable();
     ArbolSintactico arbol;
+    String currentFunctionReturnType = null;
+    int insideLoop = 0;
+    boolean oneMain = false;
     int errorCount = 0;
 
     public SymTable getSymTable() {
@@ -35,7 +38,7 @@ parser code {:
         }
 :}
 
-/* Terminales (sin UMINUS) */
+/* Terminales */
 terminal
     /* Palabras Reservadas */
     WORLD, LOCAL, DECIDE, OF, ELSE, END, LOOP, EXIT, WHEN, FOR, GIFT,
@@ -91,8 +94,6 @@ precedence right NOT;
 /* Regla de inicio */
 start with program;
 
-/* ============ PRODUCCIONES ============ */
-
 /* 1. PROGRAMA */
 program ::= statementList:sl functionList:fl mainFunction:mf
     {:
@@ -105,6 +106,10 @@ program ::= statementList:sl functionList:fl mainFunction:mf
     :}
     | statementList:sl functionList:fl
     {:
+        if (!oneMain) {
+            System.err.println("ERROR SEMÁNTICO: No se encontró la función main");
+            errorCount++;
+        }
         Nodo raizNodo = new Nodo("program");
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
@@ -114,6 +119,11 @@ program ::= statementList:sl functionList:fl mainFunction:mf
 /* 2. FUNCIÓN PRINCIPAL */
 mainFunction ::= COAL NAVIDAD block:b
     {:
+        if (oneMain) {
+            System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
+            errorCount++;
+        }
+        oneMain = true;
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
         resultado.addHijo(new Nodo("navidad"));
@@ -122,6 +132,11 @@ mainFunction ::= COAL NAVIDAD block:b
     :} |
     COAL NAVIDAD LPAREN RPAREN block:b
     {:
+       if (oneMain) {
+            System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
+            errorCount++;
+        }
+        oneMain = true;
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
         resultado.addHijo(new Nodo("navidad"));
@@ -145,33 +160,62 @@ functionList ::=
 
 /* 4. DECLARACIÓN DE FUNCIÓN */
 functionDecl ::=
-     GIFT type:t IDENTIFIER:id LPAREN paramList:pl RPAREN block:b
-          {:
-              Nodo resultado = new Nodo("functionDecl");
-              resultado.addHijo(new Nodo("gift"));
-              resultado.addHijo((Nodo)t);
+     GIFT type:t IDENTIFIER:id
+     {:
+        currentFunctionReturnType = ((Nodo)t).getTipo();
+         if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                        SymKind.FUNCTION, idleft, idright))) {
+             System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                              "): Función '" + id + "' ya declarada");
+             errorCount++;
+         }
+         symtab.enterScope();
+     :}
+     LPAREN paramList:pl RPAREN block:b
+     {:
+        currentFunctionReturnType = null;
+         symtab.exitScope();
 
-              Nodo idNode = new Nodo(id.toString());
-              // VERIFICACIÓN NULL
-              if (t != null && ((Nodo)t).getTipo() != null) {
-                  idNode.setTipo(((Nodo)t).getTipo());
-              }
-              resultado.addHijo(idNode);
+         Nodo resultado = new Nodo("functionDecl");
+         resultado.addHijo(new Nodo("gift"));
+         resultado.addHijo((Nodo)t);
 
-              resultado.addHijo(new Nodo("¿"));
-              resultado.addHijo((Nodo)pl);
-              resultado.addHijo(new Nodo("?"));
-              resultado.addHijo((Nodo)b);
+         Nodo idNode = new Nodo(id.toString());
+         if (t != null && ((Nodo)t).getTipo() != null) {
+             idNode.setTipo(((Nodo)t).getTipo());
+         }
+         resultado.addHijo(idNode);
 
-              symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.FUNCTION, idleft, idright));
+         resultado.addHijo(new Nodo("¿"));
+         resultado.addHijo((Nodo)pl);
+         resultado.addHijo(new Nodo("?"));
+         resultado.addHijo((Nodo)b);
 
-              RESULT = resultado;
-          :};
+         RESULT = resultado;
+     :};
 
 funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
     {:
+        SymInfo func = symtab.lookup((String)id);
+
+        if (func == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Función '" + id + "' no declarada");
+            errorCount++;
+        } else if (func.kind != SymKind.FUNCTION) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): '" + id + "' no es una función");
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("funcall");
         Nodo idNode = new Nodo(id.toString());
+
+        if (func != null) {
+            idNode.setTipo(func.type);
+            resultado.setTipo(func.type);
+        }
+
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("¿"));
         resultado.addHijo((Nodo)al);
@@ -245,7 +289,12 @@ param ::= type:t IDENTIFIER:id
         idNode.setTipo(((Nodo)t).getTipo());
         resultado.addHijo(idNode);
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.PARAM, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.PARAM, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Parámetro '" + id + "' duplicado");
+            errorCount++;
+        }
         RESULT = resultado;
     :};
 
@@ -289,6 +338,7 @@ block ::= LBRACE
     statementList:sl
     RBRACE
     {:
+        symtab.exitScope();
         Nodo resultado = new Nodo("block");
         resultado.addHijo(new Nodo("¡"));
 
@@ -300,8 +350,6 @@ block ::= LBRACE
         }
 
         resultado.addHijo(new Nodo("!"));
-
-        symtab.exitScope();
         RESULT = resultado;
     :};
 
@@ -376,6 +424,11 @@ statement ::= varDecl:vd
     :}
     | BREAK ENDL
     {:
+        if (insideLoop <= 0) {
+            System.err.println("ERROR SEMÁNTICO: break solo puede usarse dentro de loop o for");
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("statement");
         resultado.addHijo(new Nodo("break"));
         RESULT = resultado;
@@ -399,7 +452,12 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_VAR, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.LOCAL_VAR, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable '" + id + "' ya declarada en este ámbito");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | LOCAL type:t IDENTIFIER:id ASSIGN expression:e ENDL
@@ -409,13 +467,32 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo((Nodo)t);
 
         Nodo idNode = new Nodo(id.toString());
-        idNode.setTipo(((Nodo)t).getTipo());
+        String tipoVar = ((Nodo)t).getTipo();
+        idNode.setTipo(tipoVar);
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("="));
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE != null ? nodoE.getTipo() : null;
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_VAR, idleft, idright));
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Expresión sin tipo en declaración de variable local");
+            errorCount++;
+        } else if (!tipoVar.equals(tipoExpr)) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): No se puede asignar " + tipoExpr +
+                             " a variable local de tipo " + tipoVar);
+            errorCount++;
+        }
+
+        if (!symtab.insert(new SymInfo((String)id, tipoVar,
+                                       SymKind.LOCAL_VAR, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable '" + id + "' ya declarada en este ámbito");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id ENDL
@@ -429,7 +506,12 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_VAR, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.GLOBAL_VAR, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable global '" + id + "' ya declarada");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id ASSIGN expression:e ENDL
@@ -439,13 +521,32 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         resultado.addHijo((Nodo)t);
 
         Nodo idNode = new Nodo(id.toString());
-        idNode.setTipo(((Nodo)t).getTipo());
+        String tipoVar = ((Nodo)t).getTipo();
+        idNode.setTipo(tipoVar);
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("="));
         resultado.addHijo((Nodo)e);
         resultado.addHijo(new Nodo("endl"));
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE != null ? nodoE.getTipo() : null;
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_VAR, idleft, idright));
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Expresión sin tipo en declaración de variable global");
+            errorCount++;
+        } else if (!tipoVar.equals(tipoExpr)) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): No se puede asignar " + tipoExpr +
+                             " a variable global de tipo " + tipoVar);
+            errorCount++;
+        }
+
+        if (!symtab.insert(new SymInfo((String)id, tipoVar,
+                                       SymKind.GLOBAL_VAR, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable global '" + id + "' ya declarada");
+            errorCount++;
+        }
         RESULT = resultado;
     :};
 
@@ -462,7 +563,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)d);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_ARRAY, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.LOCAL_ARRAY, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array '" + id + "' ya declarado en este ámbito");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | LOCAL type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -479,7 +585,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)al);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.LOCAL_ARRAY, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.LOCAL_ARRAY, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array '" + id + "' ya declarado en este ámbito");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ENDL
@@ -494,7 +605,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)d);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(), SymKind.GLOBAL_ARRAY, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.GLOBAL_ARRAY, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array global '" + id + "' ya declarado");
+            errorCount++;
+        }
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -511,7 +627,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
         resultado.addHijo((Nodo)al);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.GLOBAL_ARRAY, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
+                                       SymKind.GLOBAL_ARRAY, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array global '" + id + "' ya declarado");
+            errorCount++;
+        }
         RESULT = resultado;
     :};
 
@@ -580,6 +701,28 @@ arrayElements ::= expression:e
 /* 16. ASIGNACIÓN */
 assignStmt ::= IDENTIFIER:id ASSIGN expression:e ENDL
     {:
+        SymInfo sym = symtab.lookup((String)id);
+        if (sym == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable '" + id + "' no declarada");
+            errorCount++;
+        } else {
+            Nodo nodoE = (Nodo)e;
+            String tipoVar = sym.type;
+            String tipoExpr = nodoE.getTipo();
+
+            if (tipoExpr == null || tipoExpr.isEmpty()) {
+                System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                                 "): Expresión sin tipo en asignación");
+                errorCount++;
+            } else if (!tipoVar.equals(tipoExpr)) {
+                System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                                 "): No se puede asignar " + tipoExpr +
+                                 " a variable de tipo " + tipoVar);
+                errorCount++;
+            }
+        }
+
         Nodo resultado = new Nodo("assignStmt");
         resultado.addHijo(new Nodo(id.toString()));
         resultado.addHijo(new Nodo("="));
@@ -589,35 +732,105 @@ assignStmt ::= IDENTIFIER:id ASSIGN expression:e ENDL
     :}
     | arrayAccess:aa ASSIGN expression:e ENDL
     {:
+        Nodo nodoAa = (Nodo)aa;
+        Nodo nodoE = (Nodo)e;
+
+        String tipoArray = nodoAa.getTipo();
+        String tipoExpr = nodoE.getTipo();
+
+        if (tipoArray != null && tipoExpr != null && !tipoArray.equals(tipoExpr)) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aaleft+1) +
+                             "): No se puede asignar " + tipoExpr +
+                             " a array de tipo " + tipoArray);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("assignStmt");
-        resultado.addHijo((Nodo)aa);
+        resultado.addHijo(nodoAa);
         resultado.addHijo(new Nodo("="));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("endl"));
         RESULT = resultado;
     :};
 
 /* 17. ACCESO A ARRAY */
 arrayAccess ::= IDENTIFIER:id LBRACKET expression:e1 RBRACKET LBRACKET expression:e2 RBRACKET
-        {:
-            Nodo resultado = new Nodo("access");
-            resultado.addHijo(new Nodo(id.toString()));
-            resultado.addHijo(new Nodo("["));
-            resultado.addHijo((Nodo)e1);
-            resultado.addHijo(new Nodo("]"));
-            resultado.addHijo(new Nodo("["));
-            resultado.addHijo((Nodo)e2);
-            resultado.addHijo(new Nodo("]"));
-            RESULT = resultado;
-        :};
+    {:
+        SymInfo sym = symtab.lookup((String)id);
+        if (sym == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array '" + id + "' no declarado");
+            errorCount++;
+        } else if (sym.kind != SymKind.LOCAL_ARRAY && sym.kind != SymKind.GLOBAL_ARRAY) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): '" + id + "' no es un array");
+            errorCount++;
+        }
+
+        Nodo nodoE1 = (Nodo)e1;
+        Nodo nodoE2 = (Nodo)e2;
+
+        String tipoIndice1 = nodoE1.getTipo();
+        String tipoIndice2 = nodoE2.getTipo();
+
+        if (tipoIndice1 == null || tipoIndice1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+                             "): Primer índice sin tipo en acceso a array");
+            errorCount++;
+        } else if (!tipoIndice1.equals("int")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+                             "): Los índices de array solo pueden ser int. Se encontró: " + tipoIndice1);
+            errorCount++;
+        }
+
+        if (tipoIndice2 == null || tipoIndice2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) +
+                             "): Segundo índice sin tipo en acceso a array");
+            errorCount++;
+        } else if (!tipoIndice2.equals("int")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) +
+                             "): Los índices de array solo pueden ser int. Se encontró: " + tipoIndice2);
+            errorCount++;
+        }
+
+        Nodo resultado = new Nodo("access");
+        resultado.addHijo(new Nodo(id.toString()));
+        resultado.addHijo(new Nodo("["));
+        resultado.addHijo(nodoE1);
+        resultado.addHijo(new Nodo("]"));
+        resultado.addHijo(new Nodo("["));
+        resultado.addHijo(nodoE2);
+        resultado.addHijo(new Nodo("]"));
+
+        if (sym != null) {
+            resultado.setTipo(sym.type);
+        }
+
+        RESULT = resultado;
+    :};
 
 /* 18. SHOW */
 showStmt ::= SHOW LPAREN expression:e RPAREN ENDL
     {:
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE.getTipo();
+
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Expresión sin tipo en show");
+            errorCount++;
+        } else if (!tipoExpr.equals("int") && !tipoExpr.equals("float") &&
+                   !tipoExpr.equals("char") && !tipoExpr.equals("string") &&
+                   !tipoExpr.equals("bool")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): show solo acepta int, float, char, string o bool. Se encontró: " + tipoExpr);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("showStmt");
         resultado.addHijo(new Nodo("show"));
         resultado.addHijo(new Nodo("¿"));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("?"));
         resultado.addHijo(new Nodo("endl"));
         RESULT = resultado;
@@ -666,8 +879,21 @@ conditionList ::= condition:c
 /* 22. CONDICIÓN */
 condition ::= expression:e ARROW block:b
     {:
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE.getTipo();
+
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Condición sin tipo en decide of");
+            errorCount++;
+        } else if (!tipoExpr.equals("bool")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): La condición de decide of debe ser bool. Se encontró: " + tipoExpr);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("condition");
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("->"));
         resultado.addHijo((Nodo)b);
         RESULT = resultado;
@@ -689,14 +915,32 @@ elsePart ::=
     :};
 
 /* 24. LOOP */
-loopStmt ::= LOOP statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
+loopStmt ::= LOOP
     {:
+        insideLoop++;
+    :}
+    statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
+    {:
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE.getTipo();
+
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Condición de salida sin tipo en loop");
+            errorCount++;
+        } else if (!tipoExpr.equals("bool")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
+            errorCount++;
+        }
+        insideLoop--;
+
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));
         resultado.addHijo((Nodo)sl);
         resultado.addHijo(new Nodo("exit"));
         resultado.addHijo(new Nodo("when"));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("endl"));
         resultado.addHijo(new Nodo("end"));
         resultado.addHijo(new Nodo("loop"));
@@ -704,14 +948,34 @@ loopStmt ::= LOOP statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
         RESULT = resultado;
     :};
 
-/* 25. FOR */
-forStmt ::= FOR LPAREN forVarDec:fvd expression:e1 ENDL expression:e2 RPAREN block:b
+/* 25. FOR  */
+forStmt ::= FOR LPAREN
     {:
+        symtab.enterScope();
+        insideLoop++;
+    :}
+    forVarDec:fvd expression:e1 ENDL expression:e2 RPAREN block:b
+    {:
+        Nodo nodoE1 = (Nodo)e1;
+        String tipoCondicion = nodoE1.getTipo();
+
+        if (tipoCondicion == null || tipoCondicion.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+                             "): Condición del for sin tipo");
+            errorCount++;
+        } else if (!tipoCondicion.equals("bool")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+                             "): La condición del for debe ser bool. Se encontró: " + tipoCondicion);
+            errorCount++;
+        }
+        insideLoop--;
+        symtab.exitScope();
+
         Nodo resultado = new Nodo("forStmt");
         resultado.addHijo(new Nodo("for"));
         resultado.addHijo(new Nodo("¿"));
         resultado.addHijo((Nodo)fvd);
-        resultado.addHijo((Nodo)e1);
+        resultado.addHijo(nodoE1);
         resultado.addHijo(new Nodo("endl"));
         resultado.addHijo((Nodo)e2);
         resultado.addHijo(new Nodo("?"));
@@ -719,29 +983,60 @@ forStmt ::= FOR LPAREN forVarDec:fvd expression:e1 ENDL expression:e2 RPAREN blo
         RESULT = resultado;
     :};
 
-/* 26. DECLARACIÓN EN FOR */
+/* 26. DECLARACIÓN EN FOR  */
 forVarDec ::= type:t IDENTIFIER:id ASSIGN expression:e ENDL
     {:
+        Nodo nodoE = (Nodo)e;
+        String tipoVar = ((Nodo)t).getTipo();
+        String tipoExpr = nodoE.getTipo();
+
+        if (tipoExpr == null || tipoExpr.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): Expresión sin tipo en inicialización del for");
+            errorCount++;
+        } else if (!tipoVar.equals(tipoExpr)) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): No se puede asignar " + tipoExpr +
+                             " a variable de tipo " + tipoVar + " en for");
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("forVarDec");
         resultado.addHijo((Nodo)t);
 
         Nodo idNode = new Nodo(id.toString());
-        idNode.setTipo(((Nodo)t).getTipo());
+        idNode.setTipo(tipoVar);
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("="));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("endl"));
 
-        symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),SymKind.FOR_VAR, idleft, idright));
+        if (!symtab.insert(new SymInfo((String)id, tipoVar,
+                                       SymKind.FOR_VAR, idleft, idright))) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable de FOR '" + id + "' ya declarada");
+            errorCount++;
+        }
         RESULT = resultado;
     :};
 
 /* 27. RETURN */
 returnStmt ::= RETURN expression:e ENDL
     {:
+        Nodo nodoE = (Nodo)e;
+        String tipoExpr = nodoE.getTipo();
+
+        if (currentFunctionReturnType != null &&
+            !currentFunctionReturnType.equals(tipoExpr)) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                             "): return esperaba tipo " + currentFunctionReturnType +
+                             ", se encontró: " + tipoExpr);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("returnStmt");
         resultado.addHijo(new Nodo("return"));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("endl"));
         RESULT = resultado;
     :};
@@ -780,6 +1075,14 @@ exprTerm ::= LITERAL_INTEGER:lit
     | IDENTIFIER:id
     {:
         Nodo resultado = new Nodo(id.toString());
+        SymInfo sym = symtab.lookup((String)id);
+        if (sym == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Variable '" + id + "' no declarada");
+            errorCount++;
+        } else {
+            resultado.setTipo(sym.type);
+        }
         RESULT = resultado;
     :}
     | arrayAccess:aa
@@ -795,10 +1098,12 @@ exprTerm ::= LITERAL_INTEGER:lit
     :}
     | LPAREN expression:e RPAREN
     {:
+        Nodo nodoE = (Nodo)e;
         Nodo resultado = new Nodo("¿?");
         resultado.addHijo(new Nodo("¿"));
-        resultado.addHijo((Nodo)e);
+        resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("?"));
+        resultado.setTipo(nodoE.getTipo());
         RESULT = resultado;
     :}
     | funcall:fc
@@ -807,29 +1112,90 @@ exprTerm ::= LITERAL_INTEGER:lit
    :};
 
 /* 29. EXPRESIÓN */
-/* Expresión lógica */
 expression ::= logicalExpression:le
     {:
         RESULT = le;
     :};
 
-/* Expresiones lógicas: OR, AND */
+/* Expresiones lógicas */
 logicalExpression ::= relationalExpression:re
     {:
         RESULT = re;
     :}
     | logicalExpression:le OR relationalExpression:re
     {:
-        Nodo resultado = new Nodo("~");  // OR
-        resultado.addHijo((Nodo)le);
-        resultado.addHijo((Nodo)re);
+        Nodo nodoLe = (Nodo)le;
+        Nodo nodoRe = (Nodo)re;
+
+        String tipo1 = nodoLe.getTipo();
+        String tipo2 = nodoRe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + "): Operando izquierdo sin tipo en OR");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + "): Operando derecho sin tipo en OR");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("bool") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) +
+                             "): El operador OR (~) solo acepta bool. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("bool") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) +
+                             "): El operador OR (~) solo acepta bool. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        Nodo resultado = new Nodo("~");
+        resultado.setOperador("OR");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoLe);
+        resultado.addHijo(nodoRe);
         RESULT = resultado;
     :}
     | logicalExpression:le AND relationalExpression:re
     {:
-        Nodo resultado = new Nodo("@");  // AND
-        resultado.addHijo((Nodo)le);
-        resultado.addHijo((Nodo)re);
+        Nodo nodoLe = (Nodo)le;
+        Nodo nodoRe = (Nodo)re;
+
+        String tipo1 = nodoLe.getTipo();
+        String tipo2 = nodoRe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + "): Operando izquierdo sin tipo en AND");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + "): Operando derecho sin tipo en AND");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("bool") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) +
+                             "): El operador AND (@) solo acepta bool. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("bool") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) +
+                             "): El operador AND (@) solo acepta bool. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        Nodo resultado = new Nodo("@");
+        resultado.setOperador("AND");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoLe);
+        resultado.addHijo(nodoRe);
         RESULT = resultado;
     :};
 
@@ -840,44 +1206,246 @@ relationalExpression ::= additiveExpression:ae
     :}
     | additiveExpression:ae1 EQUAL additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo en comparación");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo en comparación");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): No se puede comparar " + tipo1 + " con " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("==");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("EQ");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :}
     | additiveExpression:ae1 NOT_EQUAL additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo en comparación");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo en comparación");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): No se puede comparar " + tipo1 + " con " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("!=");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("NE");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :}
     | additiveExpression:ae1 LESS additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): El operador < solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+                             "): El operador < solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): Tipos incompatibles en <. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("<");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("LT");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :}
     | additiveExpression:ae1 LESS_EQUAL additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): El operador <= solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+                             "): El operador <= solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): Tipos incompatibles en <=. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("<=");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("LE");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :}
     | additiveExpression:ae1 GREATER additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): El operador > solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+                             "): El operador > solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): Tipos incompatibles en >. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo(">");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("GT");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :}
     | additiveExpression:ae1 GREATER_EQUAL additiveExpression:ae2
     {:
+        Nodo nodoAe1 = (Nodo)ae1;
+        Nodo nodoAe2 = (Nodo)ae2;
+
+        String tipo1 = nodoAe1.getTipo();
+        String tipo2 = nodoAe2.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): El operador >= solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+                             "): El operador >= solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+                             "): Tipos incompatibles en >=. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo(">=");
-        resultado.addHijo((Nodo)ae1);
-        resultado.addHijo((Nodo)ae2);
+        resultado.setOperador("GE");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoAe1);
+        resultado.addHijo(nodoAe2);
         RESULT = resultado;
     :};
 
@@ -888,16 +1456,92 @@ additiveExpression ::= multiplicativeExpression:me
     :}
     | additiveExpression:ae PLUS multiplicativeExpression:me
     {:
+        Nodo nodoAe = (Nodo)ae;
+        Nodo nodoMe = (Nodo)me;
+
+        String tipo1 = nodoAe.getTipo();
+        String tipo2 = nodoMe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + "): Operando izquierdo sin tipo en suma");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando derecho sin tipo en suma");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+                             "): El operador + solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador + solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+                             "): Tipos incompatibles en suma. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("+");
-        resultado.addHijo((Nodo)ae);
-        resultado.addHijo((Nodo)me);
+        resultado.setOperador("ADD");
+        resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
+        resultado.addHijo(nodoAe);
+        resultado.addHijo(nodoMe);
         RESULT = resultado;
     :}
     | additiveExpression:ae MINUS multiplicativeExpression:me
     {:
+        Nodo nodoAe = (Nodo)ae;
+        Nodo nodoMe = (Nodo)me;
+
+        String tipo1 = nodoAe.getTipo();
+        String tipo2 = nodoMe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + "): Operando izquierdo sin tipo en resta");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando derecho sin tipo en resta");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+                             "): El operador - solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador - solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+                             "): Tipos incompatibles en resta. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("-");
-        resultado.addHijo((Nodo)ae);
-        resultado.addHijo((Nodo)me);
+        resultado.setOperador("SUB");
+        resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
+        resultado.addHijo(nodoAe);
+        resultado.addHijo(nodoMe);
         RESULT = resultado;
     :};
 
@@ -908,30 +1552,168 @@ multiplicativeExpression ::= powerExpression:pe
     :}
     | multiplicativeExpression:me MULTIPLY powerExpression:pe
     {:
+        Nodo nodoMe = (Nodo)me;
+        Nodo nodoPe = (Nodo)pe;
+
+        String tipo1 = nodoMe.getTipo();
+        String tipo2 = nodoPe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en multiplicación");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en multiplicación");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador * solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+                             "): El operador * solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): Tipos incompatibles en multiplicación. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("*");
-        resultado.addHijo((Nodo)me);
-        resultado.addHijo((Nodo)pe);
+        resultado.setOperador("MULT");
+        resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
+        resultado.addHijo(nodoMe);
+        resultado.addHijo(nodoPe);
         RESULT = resultado;
     :}
     | multiplicativeExpression:me DIVIDE powerExpression:pe
     {:
+        Nodo nodoMe = (Nodo)me;
+        Nodo nodoPe = (Nodo)pe;
+
+        String tipo1 = nodoMe.getTipo();
+        String tipo2 = nodoPe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en división");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en división");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador / solo acepta int o float. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+                             "): El operador / solo acepta int o float. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
+        if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): Tipos incompatibles en división. Operando 1: " + tipo1 +
+                             ", Operando 2: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("/");
-        resultado.addHijo((Nodo)me);
-        resultado.addHijo((Nodo)pe);
+        resultado.setOperador("DIV");
+        resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
+        resultado.addHijo(nodoMe);
+        resultado.addHijo(nodoPe);
         RESULT = resultado;
     :}
     | multiplicativeExpression:me INT_DIV powerExpression:pe
     {:
+        Nodo nodoMe = (Nodo)me;
+        Nodo nodoPe = (Nodo)pe;
+
+        String tipo1 = nodoMe.getTipo();
+        String tipo2 = nodoPe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en división entera");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en división entera");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador // solo acepta int. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+                             "): El operador // solo acepta int. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("//");
-        resultado.addHijo((Nodo)me);
-        resultado.addHijo((Nodo)pe);
+        resultado.setOperador("DIV_INT");
+        resultado.setTipo("int");
+        resultado.addHijo(nodoMe);
+        resultado.addHijo(nodoPe);
         RESULT = resultado;
     :}
     | multiplicativeExpression:me MODULO powerExpression:pe
     {:
+        Nodo nodoMe = (Nodo)me;
+        Nodo nodoPe = (Nodo)pe;
+
+        String tipo1 = nodoMe.getTipo();
+        String tipo2 = nodoPe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en módulo");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en módulo");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+                             "): El operador % solo acepta int. Se encontró: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+                             "): El operador % solo acepta int. Se encontró: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("%");
-        resultado.addHijo((Nodo)me);
-        resultado.addHijo((Nodo)pe);
+        resultado.setOperador("MOD");
+        resultado.setTipo("int");
+        resultado.addHijo(nodoMe);
+        resultado.addHijo(nodoPe);
         RESULT = resultado;
     :};
 
@@ -942,46 +1724,138 @@ powerExpression ::= unaryExpression:ue
     :}
     | unaryExpression:ue POWER powerExpression:pe
     {:
+        Nodo nodoUe = (Nodo)ue;
+        Nodo nodoPe = (Nodo)pe;
+
+        String tipo1 = nodoUe.getTipo();
+        String tipo2 = nodoPe.getTipo();
+
+        if (tipo1 == null || tipo1.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Base sin tipo en potencia");
+            errorCount++;
+            tipo1 = "error";
+        }
+        if (tipo2 == null || tipo2.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Exponente sin tipo en potencia");
+            errorCount++;
+            tipo2 = "error";
+        }
+
+        if (!tipo1.equals("int") && !tipo1.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+                             "): El operador ^ solo acepta int. Se encontró base: " + tipo1);
+            errorCount++;
+        }
+
+        if (!tipo2.equals("int") && !tipo2.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+                             "): El operador ^ solo acepta int. Se encontró exponente: " + tipo2);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("^");
-        resultado.addHijo((Nodo)ue);
-        resultado.addHijo((Nodo)pe);
+        resultado.setOperador("POW");
+        resultado.setTipo("int");
+        resultado.addHijo(nodoUe);
+        resultado.addHijo(nodoPe);
         RESULT = resultado;
     :};
 
 /* Expresiones unarias */
-negative ::= MINUS unaryExpression:ue
-                 {:
-                     Nodo resultado = new Nodo("minus");
-                     resultado.addHijo((Nodo)ue);
-                     RESULT = resultado;
-                 :};
-
 unaryExpression ::= exprTerm:et
     {:
-        RESULT =et;
+        RESULT = et;
     :}
     | MINUS unaryExpression:ue
     {:
+        Nodo nodoUe = (Nodo)ue;
+        String tipo = nodoUe.getTipo();
+
+        if (tipo == null || tipo.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en negación");
+            errorCount++;
+            tipo = "error";
+        }
+
+        if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+                             "): El operador - (negación) solo acepta int o float. Se encontró: " + tipo);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("minus");
-        resultado.addHijo((Nodo)ue);
+        resultado.setOperador("NEG");
+        resultado.setTipo(tipo);
+        resultado.addHijo(nodoUe);
         RESULT = resultado;
     :}
     | NOT unaryExpression:ue
     {:
+        Nodo nodoUe = (Nodo)ue;
+        String tipo = nodoUe.getTipo();
+
+        if (tipo == null || tipo.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en NOT");
+            errorCount++;
+            tipo = "error";
+        }
+
+        if (!tipo.equals("bool") && !tipo.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+                             "): El operador NOT (Σ) solo acepta bool. Se encontró: " + tipo);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("not");
-        resultado.addHijo((Nodo)ue);
+        resultado.setOperador("NOT");
+        resultado.setTipo("bool");
+        resultado.addHijo(nodoUe);
         RESULT = resultado;
     :}
     | INCREMENT unaryExpression:ue
     {:
+        Nodo nodoUe = (Nodo)ue;
+        String tipo = nodoUe.getTipo();
+
+        if (tipo == null || tipo.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en incremento");
+            errorCount++;
+            tipo = "error";
+        }
+
+        if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+                             "): El operador ++ solo acepta int o float. Se encontró: " + tipo);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("increment");
-        resultado.addHijo((Nodo)ue);
+        resultado.setOperador("INC");
+        resultado.setTipo(tipo);
+        resultado.addHijo(nodoUe);
         RESULT = resultado;
     :}
     | DECREMENT unaryExpression:ue
     {:
+        Nodo nodoUe = (Nodo)ue;
+        String tipo = nodoUe.getTipo();
+
+        if (tipo == null || tipo.isEmpty()) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en decremento");
+            errorCount++;
+            tipo = "error";
+        }
+
+        if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+                             "): El operador -- solo acepta int o float. Se encontró: " + tipo);
+            errorCount++;
+        }
+
         Nodo resultado = new Nodo("decrement");
-        resultado.addHijo((Nodo)ue);
+        resultado.setOperador("DEC");
+        resultado.setTipo(tipo);
+        resultado.addHijo(nodoUe);
         RESULT = resultado;
     :};
 

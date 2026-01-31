@@ -7,18 +7,19 @@
 gift float _mi_  ¿ int _dif_, char _otra_ ? ¡
 	local int _otra_ endl
 	local int miArr[2][2] endl
-	local int miArr[2][2] = ¡¡1,2!,¡3,4!! endl
+	local int miArr2[2][2] = ¡¡1,2!,¡3,4!! endl
 	local string _str_="Hola  endl ~&|! endl & ?  mundo" endl
 	for   ¿ int i = 0 endl  i < 10 endl ++i ?
 	 ¡
 		loop
 		  	local int _var_2 =  1 endl
 			local int _var_ = _var_2 - 1 endl
-		exit when ¿ _var2_ > 12.2 @  ¿12 > ¿ 34+35 ? ? ?  endl
+		exit when ¿ _var_2 > 12 @  ¿12 > ¿ 34+35 ? ? ?  endl
 		end loop endl
 
 		decide   of
-		¿ false @ 3>4 ~ 4*5 > 5 + g % 4 + fun ¿ 2, 3 ? ?  ->
+		local int g = 10 endl
+		¿ false @ 3>4 ~ 4*5 > 5 + g % 4 + func¿ 2, 3 ? ?  ->
 		 ¡
 			show ¿ "entra al if" ?  endl
 			!
