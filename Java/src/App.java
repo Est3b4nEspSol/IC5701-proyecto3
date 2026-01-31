@@ -83,10 +83,58 @@ public class App {
         mfjc.pruebaParser(fullPathScanner, opcion); // aquí es donde trabajamos con los tokens
     }
 
+    public static void GenerarCodigoMIPS() throws Exception {
+        String basePath, fullPathScanner, nombre;
+
+        basePath = System.getProperty("user.dir");
+
+        while(true){
+            System.out.println("Indicar nombre del archivo (en la carpeta codigoPrueba) en formato .txt (sin agregar .txt al final): ");
+            nombre = scanner.nextLine();
+            fullPathScanner = basePath + "\\Java\\src\\codigoPrueba\\" + nombre +".txt";
+
+            File archivo = new File(fullPathScanner);
+
+            if (!archivo.exists()) {
+                System.out.println("El archivo '" + nombre + ".txt' no existe, ingrese uno que se encuentre en la carpeta codigoPrueba de la carpeta src");
+            }
+            else{
+                break;
+            }
+        }
+
+        String archivoSalida = basePath + "\\Java\\src\\codigoPrueba\\" + nombre + ".asm";
+        mfjc.generarCodigoMIPS(fullPathScanner, archivoSalida);
+    }
+
+    public static void GenerarAnalisisCompleto() throws Exception {
+        String basePath, fullPathScanner, nombre;
+
+        basePath = System.getProperty("user.dir");
+
+        while(true){
+            System.out.println("Indicar nombre del archivo (en la carpeta codigoPrueba) en formato .txt (sin agregar .txt al final): ");
+            nombre = scanner.nextLine();
+            fullPathScanner = basePath + "\\Java\\src\\codigoPrueba\\" + nombre +".txt";
+
+            File archivo = new File(fullPathScanner);
+
+            if (!archivo.exists()) {
+                System.out.println("El archivo '" + nombre + ".txt' no existe, ingrese uno que se encuentre en la carpeta codigoPrueba de la carpeta src");
+            }
+            else{
+                break;
+            }
+        }
+
+        String archivoSalida = basePath + "\\Java\\src\\codigoPrueba\\" + nombre + ".asm";
+        mfjc.analisisCompleto(fullPathScanner, archivoSalida);
+    }
+
     public static void main(String[] args) throws Exception{
         int opcion = 0;
 
-        while (opcion != 6) { // autoexplicativa, interacción continua con el usuario
+        while (opcion != 8) { // autoexplicativa, interacción continua con el usuario
             System.out.println("=================================");
             System.out.println("Seleccione una opción:");
             System.out.println("1. Generar parser");
@@ -94,7 +142,9 @@ public class App {
             System.out.println("3. Generar árbol sintáctico");
             System.out.println("4. Generar tabla de símbolos");
             System.out.println("5. Generar todo lo anterior (excepto parser)");
-            System.out.println("6. Terminar programa");
+            System.out.println("6. Generar código MIPS");
+            System.out.println("7. Análisis completo (todo + MIPS)");
+            System.out.println("8. Terminar programa");
             System.out.print("Opción: ");
 
             String input = scanner.nextLine(); // leer línea completa
@@ -123,6 +173,12 @@ public class App {
                 case 5:
                     PruebaSintactica(opcion%3);
                 case 6:
+                    GenerarCodigoMIPS();
+                    break;
+                case 7:
+                    GenerarAnalisisCompleto();
+                    break;
+                case 8:
                     System.out.println("Saliendo del programa...");
                     break;
                 default:

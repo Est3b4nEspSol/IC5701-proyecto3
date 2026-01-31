@@ -112,6 +112,72 @@ public class MainJFlexCup {
         }
     }
 
+    public void generarCodigoMIPS(String rutaScanear, String archivoSalida) throws Exception {
+        Reader reader = new BufferedReader(new FileReader(rutaScanear));
+
+        generated.Lexer lexer = new generated.Lexer(reader);
+        generated.parser parser = new generated.parser(lexer);
+
+        System.out.println("\n=== INICIANDO ANÁLISIS ===\n");
+        parser.parse();
+
+        if (parser.hasErrors()) {
+            System.err.println("\n SE ENCONTRARON ERRORES - No se generó código MIPS");
+            System.err.println("Total de errores: " + parser.getErrorCount());
+            return;
+        }
+
+        System.out.println("\n ANÁLISIS COMPLETADO SIN ERRORES\n");
+
+        parser.saveCodeMIPS(archivoSalida);
+        parser.printCodeMIPS();
+
+        System.out.println("\n=== Código MIPS guardado en codigoPrueba "  + " ===\n");
+    }
+
+    public void analisisCompleto(String rutaScanear, String archivoSalida) throws Exception {
+        Reader reader = new BufferedReader(new FileReader(rutaScanear));
+
+        generated.Lexer lexer = new generated.Lexer(reader);
+        generated.parser parser = new generated.parser(lexer);
+
+        System.out.println("\n=== INICIANDO ANÁLISIS  ===\n");
+
+
+        System.out.println("--- GENERANDO TOKENS ---");
+        prueba(rutaScanear);
+
+        reader = new BufferedReader(new FileReader(rutaScanear));
+        lexer = new generated.Lexer(reader);
+        parser = new generated.parser(lexer);
+        parser.parse();
+
+        System.out.println("\n--- ÁRBOL SINTÁCTICO ---");
+        ArbolSintactico arbol = parser.getArbolSintactico();
+        if (arbol != null) {
+            arbol.print();
+        } else {
+            System.out.println("No disponible.");
+        }
+
+        System.out.println("\n--- TABLA DE SÍMBOLOS ---");
+        parser.getSymTable().print();
+
+        if (parser.hasErrors()) {
+            System.err.println("\nSE ENCONTRARON ERRORES - No se generó código MIPS");
+            System.err.println("Total de errores: " + parser.getErrorCount());
+            return;
+        }
+
+        System.out.println("\n--- GENERANDO CÓDIGO MIPS ---");
+        parser.saveCodeMIPS(archivoSalida);
+        parser.printCodeMIPS();
+
+        System.out.println("\n=== ANÁLISIS COMPLETO FINALIZADO ===");
+        System.out.println("Tokens guardados en: tokens.txt");
+        System.out.println("Código MIPS guardado en codigoPrueba ");
+    }
+
     public static void main(String[] args) throws Exception {
 
     }

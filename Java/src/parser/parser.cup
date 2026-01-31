@@ -1,6 +1,8 @@
 package generated;
 import java_cup.runtime.*;
 import Sintactico.*;
+import java.io.FileWriter;
+import java.io.IOException;
 
 parser code {:
     Lexer lex;
@@ -11,11 +13,108 @@ parser code {:
     boolean oneMain = false;
     int errorCount = 0;
 
+    private int currentTemp = 0;
+    private int frameSize = 0;
+
+    StringBuffer textSection = new StringBuffer();
+    StringBuffer dataSection = new StringBuffer();
+    private boolean dataSectionGenerated = false;
+    private boolean textSectionGenerated = false;
+
+    public String newTemp() {
+        String temp = "$t" + (currentTemp % 10);
+        currentTemp++;
+        return temp;
+    }
+
+    public void gen(String instruction) {
+        textSection.append(instruction).append("\n");
+    }
+
+    public void initTextSection() {
+        if (!textSectionGenerated) {
+            gen(".text");
+            gen(".globl main");
+            gen("main:");
+            gen("    jal navidad");
+            gen("    li $v0, 10");
+            gen("    syscall");
+            textSectionGenerated = true;
+        }
+    }
+
+    public void allocateVariable(String variable) {
+        SymInfo sym = symtab.lookup(variable);
+        if (sym == null) {
+            System.err.println("Error: Variable '" + variable + "' no encontrada");
+            errorCount++;
+            return;
+        }
+        if (sym.offset == 0) {
+            frameSize += 4;
+            sym.offset = -frameSize;
+            gen("addi $sp, $sp, -4");
+        }
+    }
+
+    public String getVariableAddress(String variable) {
+        SymInfo sym = symtab.lookup(variable);
+        if (sym == null) {
+            System.err.println("Error: Variable '" + variable + "' no encontrada");
+            errorCount++;
+            return "0($sp)";
+        }
+        return sym.offset + "($fp)";
+    }
+
+    public String loadVariable(String variable) {
+        String temp = newTemp();
+        gen("lw " + temp + ", " + getVariableAddress(variable));
+        return temp;
+    }
+
+    public void storeVariable(String variable, String register) {
+        if (register == null || !register.startsWith("$")) {
+            System.err.println("Error: Registro inválido");
+            errorCount++;
+            return;
+        }
+        gen("sw " + register + ", " + getVariableAddress(variable));
+    }
+
+    public void saveCodeMIPS(String archivoSalida) {
+        try (FileWriter writer = new FileWriter(archivoSalida)) {
+            StringBuilder codigoCompleto = new StringBuilder();
+            if (dataSectionGenerated) {
+                codigoCompleto.append(dataSection.toString()).append("\n");
+            }
+            if (textSectionGenerated) {
+                codigoCompleto.append(textSection.toString());
+            }
+            writer.write(codigoCompleto.toString());
+            System.out.println("Código MIPS guardado en: " + archivoSalida);
+        } catch (IOException e) {
+            System.err.println("Error escribiendo archivo: " + e.getMessage());
+            errorCount++;
+        }
+    }
+
+    public void printCodeMIPS() {
+        System.out.println("\n=== CÓDIGO MIPS GENERADO ===\n");
+        if (textSectionGenerated) {
+            System.out.println(textSection.toString());
+        }
+    }
+
     public SymTable getSymTable() {
             return symtab;
         }
     public ArbolSintactico getArbolSintactico() {
         return arbol;
+    }
+
+    public boolean hasErrors() {
+        return errorCount > 0;
     }
 
     public int getErrorCount() { return errorCount; }
@@ -31,6 +130,7 @@ parser code {:
     public void unrecovered_syntax_error(Symbol cur_token) {
         System.err.println("ERROR SINTÁCTICO IRRECUPERABLE - finalizando análisis");
     }
+
 
     parser(Lexer lex){
             this.lex=lex;
@@ -97,6 +197,7 @@ start with program;
 /* 1. PROGRAMA */
 program ::= statementList:sl functionList:fl mainFunction:mf
     {:
+        initTextSection();
         Nodo raizNodo = new Nodo("program");
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
@@ -116,27 +217,62 @@ program ::= statementList:sl functionList:fl mainFunction:mf
         arbol = new ArbolSintactico(raizNodo);
         RESULT = raizNodo;
     :};
+
 /* 2. FUNCIÓN PRINCIPAL */
-mainFunction ::= COAL NAVIDAD block:b
+mainFunction ::= COAL NAVIDAD
+    {:
+        frameSize = 0;
+        currentTemp = 0;
+
+        gen("navidad:");
+        gen("    addi $sp, $sp, -8");
+        gen("    sw $fp, 4($sp)");
+        gen("    sw $ra, 0($sp)");
+        gen("    addi $fp, $sp, 4");
+    :}
+    block:b
     {:
         if (oneMain) {
             System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
             errorCount++;
         }
         oneMain = true;
+
+        gen("    lw $ra, 0($sp)");
+        gen("    lw $fp, 4($sp)");
+        gen("    addi $sp, $sp, " + (8 + frameSize));
+        gen("    jr $ra");
+
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
         resultado.addHijo(new Nodo("navidad"));
         resultado.addHijo((Nodo)b);
         RESULT = resultado;
-    :} |
-    COAL NAVIDAD LPAREN RPAREN block:b
+    :}
+    | COAL NAVIDAD LPAREN RPAREN
     {:
-       if (oneMain) {
+        frameSize = 0;
+        currentTemp = 0;
+
+        gen("navidad:");
+        gen("    addi $sp, $sp, -8");
+        gen("    sw $fp, 4($sp)");
+        gen("    sw $ra, 0($sp)");
+        gen("    addi $fp, $sp, 4");
+    :}
+    block:b
+    {:
+        if (oneMain) {
             System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
             errorCount++;
         }
         oneMain = true;
+
+        gen("    lw $ra, 0($sp)");
+        gen("    lw $fp, 4($sp)");
+        gen("    addi $sp, $sp, " + (8 + frameSize));
+        gen("    jr $ra");
+
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
         resultado.addHijo(new Nodo("navidad"));
@@ -493,6 +629,10 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
                              "): Variable '" + id + "' ya declarada en este ámbito");
             errorCount++;
         }
+        allocateVariable((String)id);
+        String tempExpr = nodoE.getTemp();
+        storeVariable((String)id, tempExpr);
+
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id ENDL
@@ -1046,6 +1186,11 @@ exprTerm ::= LITERAL_INTEGER:lit
     {:
         Nodo resultado = new Nodo(lit.toString());
         resultado.setTipo("int");
+
+        String temp = newTemp();
+        gen("li " + temp + ", " + lit);
+        resultado.setTemp(temp);
+
         RESULT = resultado;
     :}
     | LITERAL_FLOAT:lit
@@ -1082,6 +1227,8 @@ exprTerm ::= LITERAL_INTEGER:lit
             errorCount++;
         } else {
             resultado.setTipo(sym.type);
+            String temp = loadVariable((String)id);
+            resultado.setTemp(temp);
         }
         RESULT = resultado;
     :}
@@ -1497,6 +1644,19 @@ additiveExpression ::= multiplicativeExpression:me
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoAe);
         resultado.addHijo(nodoMe);
+
+        String temp1 = nodoAe.getTemp();
+        String temp2 = nodoMe.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("add " + tempResult + ", " + temp1 + ", " + temp2);
+        } else if (tipo1.equals("float")) {
+            gen("add.s " + tempResult + ", " + temp1 + ", " + temp2);
+        }
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     :}
     | additiveExpression:ae MINUS multiplicativeExpression:me
