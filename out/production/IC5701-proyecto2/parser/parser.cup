@@ -477,7 +477,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         String tipoExpr = nodoE != null ? nodoE.getTipo() : null;
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Expresión sin tipo en declaración de variable local");
             errorCount++;
         } else if (!tipoVar.equals(tipoExpr)) {
@@ -531,7 +531,7 @@ varDecl ::= LOCAL type:t IDENTIFIER:id ENDL
         String tipoExpr = nodoE != null ? nodoE.getTipo() : null;
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Expresión sin tipo en declaración de variable global");
             errorCount++;
         } else if (!tipoVar.equals(tipoExpr)) {
@@ -712,7 +712,7 @@ assignStmt ::= IDENTIFIER:id ASSIGN expression:e ENDL
             String tipoExpr = nodoE.getTipo();
 
             if (tipoExpr == null || tipoExpr.isEmpty()) {
-                System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+                System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                                  "): Expresión sin tipo en asignación");
                 errorCount++;
             } else if (!tipoVar.equals(tipoExpr)) {
@@ -739,7 +739,7 @@ assignStmt ::= IDENTIFIER:id ASSIGN expression:e ENDL
         String tipoExpr = nodoE.getTipo();
 
         if (tipoArray != null && tipoExpr != null && !tipoArray.equals(tipoExpr)) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aaleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aaleft+1) + " Columna " + (aaright+1) +
                              "): No se puede asignar " + tipoExpr +
                              " a array de tipo " + tipoArray);
             errorCount++;
@@ -774,21 +774,21 @@ arrayAccess ::= IDENTIFIER:id LBRACKET expression:e1 RBRACKET LBRACKET expressio
         String tipoIndice2 = nodoE2.getTipo();
 
         if (tipoIndice1 == null || tipoIndice1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) + " Columna " + (e1right+1) +
                              "): Primer índice sin tipo en acceso a array");
             errorCount++;
         } else if (!tipoIndice1.equals("int")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) + " Columna " + (e1right+1) +
                              "): Los índices de array solo pueden ser int. Se encontró: " + tipoIndice1);
             errorCount++;
         }
 
         if (tipoIndice2 == null || tipoIndice2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) + " Columna " + (e2right+1) +
                              "): Segundo índice sin tipo en acceso a array");
             errorCount++;
         } else if (!tipoIndice2.equals("int")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e2left+1) + " Columna " + (e2right+1) +
                              "): Los índices de array solo pueden ser int. Se encontró: " + tipoIndice2);
             errorCount++;
         }
@@ -816,13 +816,13 @@ showStmt ::= SHOW LPAREN expression:e RPAREN ENDL
         String tipoExpr = nodoE.getTipo();
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Expresión sin tipo en show");
             errorCount++;
         } else if (!tipoExpr.equals("int") && !tipoExpr.equals("float") &&
                    !tipoExpr.equals("char") && !tipoExpr.equals("string") &&
                    !tipoExpr.equals("bool")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): show solo acepta int, float, char, string o bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
@@ -883,11 +883,11 @@ condition ::= expression:e ARROW block:b
         String tipoExpr = nodoE.getTipo();
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Condición sin tipo en decide of");
             errorCount++;
         } else if (!tipoExpr.equals("bool")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): La condición de decide of debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
@@ -925,11 +925,11 @@ loopStmt ::= LOOP
         String tipoExpr = nodoE.getTipo();
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Condición de salida sin tipo en loop");
             errorCount++;
         } else if (!tipoExpr.equals("bool")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
@@ -960,11 +960,11 @@ forStmt ::= FOR LPAREN
         String tipoCondicion = nodoE1.getTipo();
 
         if (tipoCondicion == null || tipoCondicion.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) + " Columna " + (e1right+1) +
                              "): Condición del for sin tipo");
             errorCount++;
         } else if (!tipoCondicion.equals("bool")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (e1left+1) + " Columna " + (e1right+1) +
                              "): La condición del for debe ser bool. Se encontró: " + tipoCondicion);
             errorCount++;
         }
@@ -991,7 +991,7 @@ forVarDec ::= type:t IDENTIFIER:id ASSIGN expression:e ENDL
         String tipoExpr = nodoE.getTipo();
 
         if (tipoExpr == null || tipoExpr.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Expresión sin tipo en inicialización del for");
             errorCount++;
         } else if (!tipoVar.equals(tipoExpr)) {
@@ -1028,7 +1028,7 @@ returnStmt ::= RETURN expression:e ENDL
 
         if (currentFunctionReturnType != null &&
             !currentFunctionReturnType.equals(tipoExpr)) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): return esperaba tipo " + currentFunctionReturnType +
                              ", se encontró: " + tipoExpr);
             errorCount++;
@@ -1131,24 +1131,24 @@ logicalExpression ::= relationalExpression:re
         String tipo2 = nodoRe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + "): Operando izquierdo sin tipo en OR");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + " Columna " + (leright+1) + "): Operando izquierdo sin tipo en OR");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + "): Operando derecho sin tipo en OR");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + " Columna " + (reright+1) + "): Operando derecho sin tipo en OR");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("bool") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + " Columna " + (leright+1) +
                              "): El operador OR (~) solo acepta bool. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("bool") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + " Columna " + (reright+1) +
                              "): El operador OR (~) solo acepta bool. Se encontró: " + tipo2);
             errorCount++;
         }
@@ -1169,24 +1169,24 @@ logicalExpression ::= relationalExpression:re
         String tipo2 = nodoRe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + "): Operando izquierdo sin tipo en AND");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + " Columna " + (leright+1) + "): Operando izquierdo sin tipo en AND");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + "): Operando derecho sin tipo en AND");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + " Columna " + (reright+1) + "): Operando derecho sin tipo en AND");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("bool") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (leleft+1) + " Columna " + (leright+1) +
                              "): El operador AND (@) solo acepta bool. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("bool") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (releft+1) + " Columna " + (reright+1) +
                              "): El operador AND (@) solo acepta bool. Se encontró: " + tipo2);
             errorCount++;
         }
@@ -1213,18 +1213,18 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo en comparación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo en comparación");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo en comparación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) + "): Operando derecho sin tipo en comparación");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): No se puede comparar " + tipo1 + " con " + tipo2);
             errorCount++;
         }
@@ -1245,18 +1245,18 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo en comparación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo en comparación");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo en comparación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) +"): Operando derecho sin tipo en comparación");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): No se puede comparar " + tipo1 + " con " + tipo2);
             errorCount++;
         }
@@ -1277,30 +1277,30 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) + "): Operando derecho sin tipo");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): El operador < solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) +
                              "): El operador < solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): Tipos incompatibles en <. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1322,30 +1322,30 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) + "): Operando derecho sin tipo");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): El operador <= solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) +
                              "): El operador <= solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae2right+1) +
                              "): Tipos incompatibles en <=. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1367,30 +1367,30 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) + "): Operando derecho sin tipo");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): El operador > solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) +
                              "): El operador > solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae2right+1) +
                              "): Tipos incompatibles en >. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1412,30 +1412,30 @@ relationalExpression ::= additiveExpression:ae
         String tipo2 = nodoAe2.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + "): Operando izquierdo sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) + "): Operando izquierdo sin tipo");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + "): Operando derecho sin tipo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) + "): Operando derecho sin tipo");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): El operador >= solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae2left+1) + " Columna " + (ae2right+1) +
                              "): El operador >= solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ae1left+1) + " Columna " + (ae1right+1) +
                              "): Tipos incompatibles en >=. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1463,30 +1463,30 @@ additiveExpression ::= multiplicativeExpression:me
         String tipo2 = nodoMe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + "): Operando izquierdo sin tipo en suma");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +  " Columna " + (aeright+1) + "): Operando izquierdo sin tipo en suma");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando derecho sin tipo en suma");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) + "): Operando derecho sin tipo en suma");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + " Columna " + (aeright+1) +
                              "): El operador + solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador + solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + " Columna " + (aeright+1) +
                              "): Tipos incompatibles en suma. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1508,30 +1508,30 @@ additiveExpression ::= multiplicativeExpression:me
         String tipo2 = nodoMe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + "): Operando izquierdo sin tipo en resta");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + " Columna " + (aeright+1) + "): Operando izquierdo sin tipo en resta");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando derecho sin tipo en resta");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +"): Operando derecho sin tipo en resta");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + " Columna " + (aeright+1) +
                              "): El operador - solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador - solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (aeleft+1) + " Columna " + (aeright+1) +
                              "): Tipos incompatibles en resta. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1559,30 +1559,30 @@ multiplicativeExpression ::= powerExpression:pe
         String tipo2 = nodoPe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en multiplicación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) + "): Operando izquierdo sin tipo en multiplicación");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en multiplicación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) + "): Operando derecho sin tipo en multiplicación");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador * solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +
                              "): El operador * solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): Tipos incompatibles en multiplicación. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1604,30 +1604,30 @@ multiplicativeExpression ::= powerExpression:pe
         String tipo2 = nodoPe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en división");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) + "): Operando izquierdo sin tipo en división");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en división");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) + "): Operando derecho sin tipo en división");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("float") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador / solo acepta int o float. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("float") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +
                              "): El operador / solo acepta int o float. Se encontró: " + tipo2);
             errorCount++;
         }
 
         if (!tipo1.equals(tipo2) && !tipo1.equals("error") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): Tipos incompatibles en división. Operando 1: " + tipo1 +
                              ", Operando 2: " + tipo2);
             errorCount++;
@@ -1649,24 +1649,24 @@ multiplicativeExpression ::= powerExpression:pe
         String tipo2 = nodoPe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en división entera");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) + "): Operando izquierdo sin tipo en división entera");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en división entera");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) + "): Operando derecho sin tipo en división entera");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador // solo acepta int. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +
                              "): El operador // solo acepta int. Se encontró: " + tipo2);
             errorCount++;
         }
@@ -1687,24 +1687,24 @@ multiplicativeExpression ::= powerExpression:pe
         String tipo2 = nodoPe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + "): Operando izquierdo sin tipo en módulo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) + "): Operando izquierdo sin tipo en módulo");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Operando derecho sin tipo en módulo");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +"): Operando derecho sin tipo en módulo");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (meleft+1) + " Columna " + (meright+1) +
                              "): El operador % solo acepta int. Se encontró: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +
                              "): El operador % solo acepta int. Se encontró: " + tipo2);
             errorCount++;
         }
@@ -1731,24 +1731,24 @@ powerExpression ::= unaryExpression:ue
         String tipo2 = nodoPe.getTipo();
 
         if (tipo1 == null || tipo1.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Base sin tipo en potencia");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) + "): Base sin tipo en potencia");
             errorCount++;
             tipo1 = "error";
         }
         if (tipo2 == null || tipo2.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + "): Exponente sin tipo en potencia");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) + "): Exponente sin tipo en potencia");
             errorCount++;
             tipo2 = "error";
         }
 
         if (!tipo1.equals("int") && !tipo1.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) +
                              "): El operador ^ solo acepta int. Se encontró base: " + tipo1);
             errorCount++;
         }
 
         if (!tipo2.equals("int") && !tipo2.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (peleft+1) + " Columna " + (peright+1) +
                              "): El operador ^ solo acepta int. Se encontró exponente: " + tipo2);
             errorCount++;
         }
@@ -1772,13 +1772,14 @@ unaryExpression ::= exprTerm:et
         String tipo = nodoUe.getTipo();
 
         if (tipo == null || tipo.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en negación");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) +
+                             "): Operando sin tipo en negación");
             errorCount++;
             tipo = "error";
         }
 
         if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) +
                              "): El operador - (negación) solo acepta int o float. Se encontró: " + tipo);
             errorCount++;
         }
@@ -1795,13 +1796,14 @@ unaryExpression ::= exprTerm:et
         String tipo = nodoUe.getTipo();
 
         if (tipo == null || tipo.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en NOT");
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) +
+                             "): Operando sin tipo en NOT");
             errorCount++;
             tipo = "error";
         }
 
         if (!tipo.equals("bool") && !tipo.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + " Columna " + (ueright+1) +
                              "): El operador NOT (Σ) solo acepta bool. Se encontró: " + tipo);
             errorCount++;
         }
@@ -1812,19 +1814,21 @@ unaryExpression ::= exprTerm:et
         resultado.addHijo(nodoUe);
         RESULT = resultado;
     :}
-    | INCREMENT unaryExpression:ue
+    | INCREMENT IDENTIFIER:id
     {:
-        Nodo nodoUe = (Nodo)ue;
-        String tipo = nodoUe.getTipo();
-
-        if (tipo == null || tipo.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en incremento");
+        SymInfo sym = symtab.lookup((String)id);
+        if (sym == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             ", Columna " + (idright+1) +
+                             "): Variable '" + id + "' no declarada");
             errorCount++;
-            tipo = "error";
         }
 
+        String tipo = sym != null ? sym.type : "error";
+
         if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             ", Columna " + (idright+1) +
                              "): El operador ++ solo acepta int o float. Se encontró: " + tipo);
             errorCount++;
         }
@@ -1832,22 +1836,28 @@ unaryExpression ::= exprTerm:et
         Nodo resultado = new Nodo("increment");
         resultado.setOperador("INC");
         resultado.setTipo(tipo);
-        resultado.addHijo(nodoUe);
+
+        Nodo idNode = new Nodo(id.toString());
+        idNode.setTipo(tipo);
+        resultado.addHijo(idNode);
+
         RESULT = resultado;
     :}
-    | DECREMENT unaryExpression:ue
+    | DECREMENT IDENTIFIER:id
     {:
-        Nodo nodoUe = (Nodo)ue;
-        String tipo = nodoUe.getTipo();
-
-        if (tipo == null || tipo.isEmpty()) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) + "): Operando sin tipo en decremento");
+        SymInfo sym = symtab.lookup((String)id);
+        if (sym == null) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             ", Columna " + (idright+1) +
+                             "): Variable '" + id + "' no declarada");
             errorCount++;
-            tipo = "error";
         }
 
+        String tipo = sym != null ? sym.type : "error";
+
         if (!tipo.equals("int") && !tipo.equals("float") && !tipo.equals("error")) {
-            System.err.println("ERROR SEMÁNTICO (Línea " + (ueleft+1) +
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             ", Columna " + (idright+1) +
                              "): El operador -- solo acepta int o float. Se encontró: " + tipo);
             errorCount++;
         }
@@ -1855,7 +1865,11 @@ unaryExpression ::= exprTerm:et
         Nodo resultado = new Nodo("decrement");
         resultado.setOperador("DEC");
         resultado.setTipo(tipo);
-        resultado.addHijo(nodoUe);
+
+        Nodo idNode = new Nodo(id.toString());
+        idNode.setTipo(tipo);
+        resultado.addHijo(idNode);
+
         RESULT = resultado;
     :};
 
