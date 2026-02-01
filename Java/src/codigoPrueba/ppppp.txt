@@ -7,12 +7,14 @@ coal navidad ¿ ? ¡
     local int mult = a * b endl
     local int div = a / b endl
     local int mod = a % b endl
+    local int power = a^b endl
 
     show¿suma? endl
     show¿resta? endl
     show¿mult? endl
     show¿div? endl
     show¿mod? endl
+    show¿power? endl
 
     local bool menor = a < b endl
     local bool mayor = a > b endl

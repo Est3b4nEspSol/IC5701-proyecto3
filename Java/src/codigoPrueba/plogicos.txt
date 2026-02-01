@@ -1,0 +1,30 @@
+coal navidad ¡
+    local bool verdadero = true endl
+    local bool falso = false endl
+
+    local bool not_true = Σ verdadero endl      | false
+    local bool not_false = Σ falso endl         | true
+
+    show¿not_true? endl     | false
+    show¿not_false? endl    | true
+
+    local bool and1 = verdadero @ verdadero endl    | true
+    local bool and2 = verdadero @ falso endl        | false
+    local bool and3 = falso @ verdadero endl        | false
+    local bool and4 = falso @ falso endl            | false
+
+    show¿and1? endl
+    show¿and2? endl
+    show¿and3? endl
+    show¿and4? endl
+
+    local bool or1 = verdadero ~ verdadero endl     | true
+    local bool or2 = verdadero ~ falso endl         | true
+    local bool or3 = falso ~ verdadero endl         | true
+    local bool or4 = falso ~ falso endl             | false
+
+    show¿or1? endl
+    show¿or2? endl
+    show¿or3? endl
+    show¿or4? endl
+!

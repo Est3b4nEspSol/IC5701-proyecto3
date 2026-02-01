@@ -1,0 +1,9 @@
+coal navidad ¡
+    local string msg1 = "Primera linea" endl
+    local string msg2 = "Segunda linea" endl
+    local string msg3 = "Tercera linea" endl
+
+    show¿msg1? endl
+    show¿msg2? endl
+    show¿msg3? endl
+!
