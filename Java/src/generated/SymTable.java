@@ -14,6 +14,9 @@ public class SymTable {
         scopes.push(new HashMap<>());
     }
 
+    public int lenScopes(){
+        return scopes.size();
+    }
     public void exitScope() {
         if (!scopes.isEmpty()) {
             todo.add(scopes.pop());

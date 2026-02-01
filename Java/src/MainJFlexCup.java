@@ -122,7 +122,7 @@ public class MainJFlexCup {
         parser.parse();
 
         if (parser.hasErrors()) {
-            System.err.println("\n SE ENCONTRARON ERRORES - No se generó código MIPS");
+            System.err.println("\nSE ENCONTRARON ERRORES - No se generó código MIPS");
             System.err.println("Total de errores: " + parser.getErrorCount());
             return;
         }

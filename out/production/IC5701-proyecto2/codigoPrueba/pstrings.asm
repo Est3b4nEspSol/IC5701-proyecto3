@@ -1,7 +1,7 @@
 .data
-_str_0: .asciiz Primera linea
-_str_1: .asciiz Segunda linea
-_str_2: .asciiz Tercera linea
+_str_0: .asciiz "Primera linea"
+_str_1: .asciiz "Segunda linea"
+_str_2: .asciiz "Tercera linea"
 
 .text
 .globl main

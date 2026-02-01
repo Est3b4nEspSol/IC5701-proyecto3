@@ -1,3 +1,5 @@
+world int x = 5 endl
+
 coal navidad ¿ ? ¡
     local int a = 5 endl
     local int b = 3 endl

@@ -4,6 +4,7 @@ main:
     jal navidad
     li $v0, 10
     syscall
+li $t0, 5
 navidad:
 addi $sp, $sp, -8
 sw $ra, 4($sp)
@@ -12,16 +13,17 @@ move $fp, $sp
 li $t0, 5
 addi $sp, $sp, -4
 sw $t0, -4($fp)
-li $t1, 3
+li $t1, 2
+li $t2, 3
 addi $sp, $sp, -4
-sw $t1, -8($fp)
-lw $t2, -4($fp)
-lw $t3, -8($fp)
-add $t4, $t2, $t3
+sw $t2, -8($fp)
+lw $t3, -4($fp)
+lw $t4, -8($fp)
+add $t5, $t3, $t4
 addi $sp, $sp, -4
-sw $t4, -12($fp)
-lw $t5, -12($fp)
-move $a0, $t5
+sw $t5, -12($fp)
+lw $t6, -12($fp)
+move $a0, $t6
 li $v0, 1
 syscall
 li $a0, 10

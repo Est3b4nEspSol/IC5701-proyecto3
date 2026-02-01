@@ -753,7 +753,6 @@ public class parser extends java_cup.runtime.lr_parser {
         System.err.println("ERROR SINTÁCTICO (Línea " + (cur_token.left + 1) +
                           ", Columna " + (cur_token.right + 1) + "): " +
                           "Token inesperado '" + cur_token.value + "'");
-
     }
 
     public void unrecovered_syntax_error(Symbol cur_token) {
@@ -1665,7 +1664,11 @@ class CUP$parser$actions {
         idNode.setTipo(((Nodo)t).getTipo());
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("endl"));
-
+        if (symtab.lenScopes() > 1) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                 "): Array global '" + id + "' Variables globales solo pueden declararse en el ámbito global");
+            errorCount++;
+        }
         if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
                                        SymKind.GLOBAL_VAR, idleft, idright))) {
             System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
@@ -1705,7 +1708,11 @@ class CUP$parser$actions {
         resultado.addHijo(new Nodo("endl"));
         Nodo nodoE = (Nodo)e;
         String tipoExpr = nodoE != null ? nodoE.getTipo() : null;
-
+        if (symtab.lenScopes() > 1) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array global '" + id + "' Variables globales solo pueden declararse en el ámbito global");
+            errorCount++;
+        }
         if (tipoExpr == null || tipoExpr.isEmpty()) {
             System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): Expresión sin tipo en declaración de variable global");
@@ -1829,7 +1836,11 @@ class CUP$parser$actions {
         resultado.addHijo(idNode);
         resultado.addHijo((Nodo)d);
         resultado.addHijo(new Nodo("endl"));
-
+        if (symtab.lenScopes() > 1) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array global '" + id + "' Variables globales solo pueden declararse en el ámbito global");
+            errorCount++;
+        }
         if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
                                        SymKind.GLOBAL_ARRAY, idleft, idright))) {
             System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
@@ -1870,7 +1881,11 @@ class CUP$parser$actions {
         resultado.addHijo(new Nodo("="));
         resultado.addHijo((Nodo)al);
         resultado.addHijo(new Nodo("endl"));
-
+        if (symtab.lenScopes() > 1) {
+            System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
+                             "): Array global '" + id + "' Variables globales solo pueden declararse en el ámbito global");
+            errorCount++;
+        }
         if (!symtab.insert(new SymInfo((String)id, ((Nodo)t).getTipo(),
                                        SymKind.GLOBAL_ARRAY, idleft, idright))) {
             System.err.println("ERROR SEMÁNTICO (Línea " + (idleft+1) + " Columna " + (idright+1) +
