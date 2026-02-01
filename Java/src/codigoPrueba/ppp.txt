@@ -23,7 +23,7 @@ coal navidad ¿ ? ¡
     local bool error6 = a @ b endl
 
     | ERROR: NOT con int
-    local bool error7 = Σa endl
+    local bool error7 = Σ a endl
 
     | ERROR: comparación < con bool
     local bool error8 = b < true endl

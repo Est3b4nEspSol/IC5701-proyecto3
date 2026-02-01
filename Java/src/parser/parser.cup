@@ -16,8 +16,8 @@ parser code {:
     private int currentTemp = 0;
     private int frameSize = 0;
 
-    StringBuffer textSection = new StringBuffer();
-    StringBuffer dataSection = new StringBuffer();
+    private StringBuffer textSection = new StringBuffer();
+    private StringBuffer dataSection = new StringBuffer();
     private boolean dataSectionGenerated = false;
     private boolean textSectionGenerated = false;
 
@@ -33,12 +33,15 @@ parser code {:
 
     public void initTextSection() {
         if (!textSectionGenerated) {
-            gen(".text");
-            gen(".globl main");
-            gen("main:");
-            gen("    jal navidad");
-            gen("    li $v0, 10");
-            gen("    syscall");
+            String textSectionCode = ".text\n" +
+                                    ".globl main\n" +
+                                    "main:\n" +
+                                    "    jal navidad\n" +
+                                    "    li $v0, 10\n" +
+                                    "    syscall\n";
+
+            textSection.insert(0, textSectionCode);
+
             textSectionGenerated = true;
         }
     }
@@ -132,7 +135,7 @@ parser code {:
     }
 
 
-    parser(Lexer lex){
+    parser(Lexer lex) {
             this.lex=lex;
             this.arbol = null;
         }
@@ -197,16 +200,20 @@ start with program;
 /* 1. PROGRAMA */
 program ::= statementList:sl functionList:fl mainFunction:mf
     {:
-        initTextSection();
+
+
         Nodo raizNodo = new Nodo("program");
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
         raizNodo.addHijo((Nodo)mf);
         arbol = new ArbolSintactico(raizNodo);
+        initTextSection();
         RESULT = raizNodo;
     :}
     | statementList:sl functionList:fl
     {:
+
+
         if (!oneMain) {
             System.err.println("ERROR SEMÁNTICO: No se encontró la función main");
             errorCount++;
@@ -215,6 +222,7 @@ program ::= statementList:sl functionList:fl mainFunction:mf
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
         arbol = new ArbolSintactico(raizNodo);
+        initTextSection();
         RESULT = raizNodo;
     :};
 
@@ -225,10 +233,10 @@ mainFunction ::= COAL NAVIDAD
         currentTemp = 0;
 
         gen("navidad:");
-        gen("    addi $sp, $sp, -8");
-        gen("    sw $fp, 4($sp)");
-        gen("    sw $ra, 0($sp)");
-        gen("    addi $fp, $sp, 4");
+        gen("addi $sp, $sp, -8");
+        gen("sw $ra, 4($sp)");
+        gen("sw $fp, 0($sp)");
+        gen("move $fp, $sp");
     :}
     block:b
     {:
@@ -238,10 +246,11 @@ mainFunction ::= COAL NAVIDAD
         }
         oneMain = true;
 
-        gen("    lw $ra, 0($sp)");
-        gen("    lw $fp, 4($sp)");
-        gen("    addi $sp, $sp, " + (8 + frameSize));
-        gen("    jr $ra");
+        gen("move $sp, $fp");
+        gen("lw $ra, 4($sp)");
+        gen("lw $fp, 0($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
 
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
@@ -250,35 +259,36 @@ mainFunction ::= COAL NAVIDAD
         RESULT = resultado;
     :}
     | COAL NAVIDAD LPAREN RPAREN
-    {:
-        frameSize = 0;
-        currentTemp = 0;
+          {:
+              frameSize = 0;
+              currentTemp = 0;
 
-        gen("navidad:");
-        gen("    addi $sp, $sp, -8");
-        gen("    sw $fp, 4($sp)");
-        gen("    sw $ra, 0($sp)");
-        gen("    addi $fp, $sp, 4");
-    :}
-    block:b
-    {:
-        if (oneMain) {
-            System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
-            errorCount++;
-        }
-        oneMain = true;
+              gen("navidad:");
+              gen("addi $sp, $sp, -8");
+              gen("sw $ra, 4($sp)");
+              gen("sw $fp, 0($sp)");
+              gen("move $fp, $sp");
+          :}
+          block:b
+          {:
+              if (oneMain) {
+                  System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
+                  errorCount++;
+              }
+              oneMain = true;
 
-        gen("    lw $ra, 0($sp)");
-        gen("    lw $fp, 4($sp)");
-        gen("    addi $sp, $sp, " + (8 + frameSize));
-        gen("    jr $ra");
+              gen("move $sp, $fp");
+              gen("lw $ra, 4($sp)");
+              gen("lw $fp, 0($sp)");
+              gen("addi $sp, $sp, 8");
+              gen("jr $ra");
 
-        Nodo resultado = new Nodo("mainFunction");
-        resultado.addHijo(new Nodo("coal"));
-        resultado.addHijo(new Nodo("navidad"));
-        resultado.addHijo((Nodo)b);
-        RESULT = resultado;
-    :};
+              Nodo resultado = new Nodo("mainFunction");
+              resultado.addHijo(new Nodo("coal"));
+              resultado.addHijo(new Nodo("navidad"));
+              resultado.addHijo((Nodo)b);
+              RESULT = resultado;
+          :};
 
 /* 3. LISTA DE FUNCIONES */
 functionList ::=
@@ -965,7 +975,42 @@ showStmt ::= SHOW LPAREN expression:e RPAREN ENDL
             System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): show solo acepta int, float, char, string o bool. Se encontró: " + tipoExpr);
             errorCount++;
-        }
+       } else {
+
+                  String temp = nodoE.getTemp();
+
+                  if (temp != null) {
+                      if (tipoExpr.equals("int")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 1");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("float")) {
+                          gen("mov.s $f12, " + temp);
+                          gen("li $v0, 2");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("char")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 11");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("string")) {
+                          gen("la $a0, " + temp);
+                          gen("li $v0, 4");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("bool")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 1");
+                          gen("syscall");
+                      }
+
+                      gen("li $a0, 10");
+                      gen("li $v0, 11");
+                      gen("syscall");
+                  }
+              }
 
         Nodo resultado = new Nodo("showStmt");
         resultado.addHijo(new Nodo("show"));
