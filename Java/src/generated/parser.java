@@ -625,6 +625,7 @@ public class parser extends java_cup.runtime.lr_parser {
 
     private StringBuffer textSection = new StringBuffer();
     private StringBuffer dataSection = new StringBuffer();
+    private int labelCounter = 0;
     private boolean dataSectionGenerated = false;
     private boolean textSectionGenerated = false;
 
@@ -692,6 +693,10 @@ public class parser extends java_cup.runtime.lr_parser {
         gen("sw " + register + ", " + getVariableAddress(variable));
     }
 
+    public String newLabel(String prefix) {
+        return prefix + "_" + (labelCounter++);
+    }
+
     public void saveCodeMIPS(String archivoSalida) {
         try (FileWriter writer = new FileWriter(archivoSalida)) {
             StringBuilder codigoCompleto = new StringBuilder();
@@ -742,7 +747,7 @@ public class parser extends java_cup.runtime.lr_parser {
     }
 
 
-    parser(Lexer lex){
+    parser(Lexer lex) {
             this.lex=lex;
             this.arbol = null;
         }
@@ -2156,7 +2161,7 @@ class CUP$parser$actions {
             System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): show solo acepta int, float, char, string o bool. Se encontró: " + tipoExpr);
             errorCount++;
-    } else {
+       } else {
 
                   String temp = nodoE.getTemp();
 
@@ -2786,6 +2791,16 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoLe);
         resultado.addHijo(nodoRe);
+
+        String temp1 = nodoLe.getTemp();
+        String temp2 = nodoRe.getTemp();
+        String tempResult = newTemp();
+
+        gen("or " + tempResult + ", " + temp1 + ", " + temp2);
+
+        resultado.setTemp(tempResult);
+        RESULT = resultado;
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("logicalExpression",12, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2837,6 +2852,14 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoLe);
         resultado.addHijo(nodoRe);
+
+        String temp1 = nodoLe.getTemp();
+        String temp2 = nodoRe.getTemp();
+        String tempResult = newTemp();
+
+        gen("and " + tempResult + ", " + temp1 + ", " + temp2);
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("logicalExpression",12, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2896,6 +2919,24 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int") || tipo1.equals("bool") || tipo1.equals("char")) {
+            gen("xor " + tempResult + ", " + temp1 + ", " + temp2);
+            gen("sltu " + tempResult + ", " + tempResult + ", 1");
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("eq_true");
+            gen("c.eq.s " + temp1 + ", " + temp2);
+            gen("li " + tempResult + ", 0");
+            gen("bc1f " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen(labelTrue + ":");
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2941,6 +2982,30 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int") || tipo1.equals("bool") || tipo1.equals("char")) {
+            String tempXor = newTemp();
+            gen("xor " + tempXor + ", " + temp1 + ", " + temp2);
+            gen("sltu " + tempResult + ", $zero, " + tempXor);
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("ne_true");
+            String labelEnd = newLabel("ne_end");
+
+            gen("c.eq.s " + temp1 + ", " + temp2);
+            gen("bc1t " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen("b " + labelEnd);
+            gen(labelTrue + ":");
+            gen("li " + tempResult + ", 0");
+            gen(labelEnd + ":");
+        }
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2999,6 +3064,25 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("slt " + tempResult + ", " + temp1 + ", " + temp2);
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("lt_true");
+            String labelEnd = newLabel("lt_end");
+
+            gen("c.lt.s " + temp1 + ", " + temp2);
+            gen("li " + tempResult + ", 0");
+            gen("bc1f " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen(labelTrue + ":");
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3057,6 +3141,26 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            String tempGT = newTemp();
+            gen("slt " + tempGT + ", " + temp2 + ", " + temp1);
+            gen("xori " + tempResult + ", " + tempGT + ", 1");
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("le_true");
+
+            gen("c.le.s " + temp1 + ", " + temp2);
+            gen("li " + tempResult + ", 0");
+            gen("bc1f " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen(labelTrue + ":");
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3115,6 +3219,24 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("slt " + tempResult + ", " + temp2 + ", " + temp1);
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("gt_true");
+
+            gen("c.lt.s " + temp2 + ", " + temp1);
+            gen("li " + tempResult + ", 0");
+            gen("bc1f " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen(labelTrue + ":");
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3173,6 +3295,26 @@ class CUP$parser$actions {
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
+
+        String temp1 = nodoAe1.getTemp();
+        String temp2 = nodoAe2.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("slt " + tempResult + ", " + temp1 + ", " + temp2);
+            gen("xori " + tempResult + ", " + tempResult + ", 1");
+        } else if (tipo1.equals("float")) {
+            String labelTrue = newLabel("ge_true");
+
+            gen("c.le.s " + temp2 + ", " + temp1);
+            gen("li " + tempResult + ", 0");
+            gen("bc1f " + labelTrue);
+            gen("li " + tempResult + ", 1");
+            gen(labelTrue + ":");
+        }
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("relationalExpression",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3316,6 +3458,18 @@ class CUP$parser$actions {
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoAe);
         resultado.addHijo(nodoMe);
+
+        String temp1 = nodoAe.getTemp();
+        String temp2 = nodoMe.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("sub " + tempResult + ", " + temp1 + ", " + temp2);
+        } else if (tipo1.equals("float")) {
+            gen("sub.s " + tempResult + ", " + temp1 + ", " + temp2);
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("additiveExpression",15, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3388,6 +3542,18 @@ class CUP$parser$actions {
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
+
+        String temp1 = nodoMe.getTemp();
+        String temp2 = nodoPe.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("mul " + tempResult + ", " + temp1 + ", " + temp2);
+        } else if (tipo1.equals("float")) {
+            gen("mul.s " + tempResult + ", " + temp1 + ", " + temp2);
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("multiplicativeExpression",16, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3446,6 +3612,20 @@ class CUP$parser$actions {
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
+
+        String temp1 = nodoMe.getTemp();
+        String temp2 = nodoPe.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo1.equals("int")) {
+            gen("div " + temp1 + ", " + temp2);
+            gen("mflo " + tempResult);
+        } else if (tipo1.equals("float")) {
+            gen("div.s " + tempResult + ", " + temp1 + ", " + temp2);
+        }
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("multiplicativeExpression",16, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3497,6 +3677,16 @@ class CUP$parser$actions {
         resultado.setTipo("int");
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
+
+        String temp1 = nodoMe.getTemp();
+        String temp2 = nodoPe.getTemp();
+        String tempResult = newTemp();
+
+        gen("div " + temp1 + ", " + temp2);
+        gen("mflo " + tempResult);
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("multiplicativeExpression",16, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3548,6 +3738,16 @@ class CUP$parser$actions {
         resultado.setTipo("int");
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
+
+        String temp1 = nodoMe.getTemp();
+        String temp2 = nodoPe.getTemp();
+        String tempResult = newTemp();
+
+        gen("div " + temp1 + ", " + temp2);
+        gen("mfhi " + tempResult);
+
+        resultado.setTemp(tempResult);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("multiplicativeExpression",16, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3613,6 +3813,26 @@ class CUP$parser$actions {
         resultado.setTipo("int");
         resultado.addHijo(nodoUe);
         resultado.addHijo(nodoPe);
+
+        String temp1 = nodoUe.getTemp();
+        String temp2 = nodoPe.getTemp();
+        String tempResult = newTemp();
+        String tempCounter = newTemp();
+
+        int labelNum = currentTemp++;
+        String labelLoop = "pow_loop_" + labelNum;
+        String labelEnd = "pow_end_" + labelNum;
+
+        gen("li " + tempResult + ", 1");
+        gen("beqz " + temp2 + ", " + labelEnd);
+        gen("move " + tempCounter + ", " + temp2);
+        gen(labelLoop + ":");
+        gen("mul " + tempResult + ", " + tempResult + ", " + temp1);
+        gen("addi " + tempCounter + ", " + tempCounter + ", -1");
+        gen("bgtz " + tempCounter + ", " + labelLoop);
+        gen(labelEnd + ":");
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("powerExpression",17, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3661,6 +3881,17 @@ class CUP$parser$actions {
         resultado.setOperador("NEG");
         resultado.setTipo(tipo);
         resultado.addHijo(nodoUe);
+
+        String temp = nodoUe.getTemp();
+        String tempResult = newTemp();
+
+        if (tipo.equals("int")) {
+            gen("sub " + tempResult + ", $zero, " + temp);
+        } else if (tipo.equals("float")) {
+            gen("neg.s " + tempResult + ", " + temp);
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("unaryExpression",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3695,6 +3926,13 @@ class CUP$parser$actions {
         resultado.setOperador("NOT");
         resultado.setTipo("bool");
         resultado.addHijo(nodoUe);
+
+        String temp = nodoUe.getTemp();
+        String tempResult = newTemp();
+
+        gen("sltu " + tempResult + ", " + temp + ", 1");
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("unaryExpression",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3734,6 +3972,20 @@ class CUP$parser$actions {
         idNode.setTipo(tipo);
         resultado.addHijo(idNode);
 
+        String temp = loadVariable((String)id);
+        String tempResult = newTemp();
+
+        if (tipo.equals("int")) {
+            gen("addi " + tempResult + ", " + temp + ", 1");
+            storeVariable((String)id, tempResult);
+        } else if (tipo.equals("float")) {
+            String tempOne = newTemp();
+            gen("li.s " + tempOne + ", 1.0");
+            gen("add.s " + tempResult + ", " + temp + ", " + tempOne);
+            storeVariable((String)id, tempResult);
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("unaryExpression",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -3773,6 +4025,20 @@ class CUP$parser$actions {
         idNode.setTipo(tipo);
         resultado.addHijo(idNode);
 
+        String temp = loadVariable((String)id);
+        String tempResult = newTemp();
+
+        if (tipo.equals("int")) {
+            gen("addi " + tempResult + ", " + temp + ", -1");
+            storeVariable((String)id, tempResult);
+        } else if (tipo.equals("float")) {
+            String tempOne = newTemp();
+            gen("li.s " + tempOne + ", 1.0");
+            gen("sub.s " + tempResult + ", " + temp + ", " + tempOne);
+            storeVariable((String)id, tempResult);
+        }
+
+        resultado.setTemp(tempResult);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("unaryExpression",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);

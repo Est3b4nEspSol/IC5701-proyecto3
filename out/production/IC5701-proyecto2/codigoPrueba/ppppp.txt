@@ -1,0 +1,29 @@
+coal navidad ¿ ? ¡
+    local int a = 10 endl
+    local int b = 3 endl
+
+    local int suma = a + b endl
+    local int resta = a - b endl
+    local int mult = a * b endl
+    local int div = a / b endl
+    local int mod = a % b endl
+
+    show¿suma? endl
+    show¿resta? endl
+    show¿mult? endl
+    show¿div? endl
+    show¿mod? endl
+
+    local bool menor = a < b endl
+    local bool mayor = a > b endl
+    local bool igual = a == b endl
+
+    show¿menor? endl
+    show¿mayor? endl
+    show¿igual? endl
+
+    local int incremento = ++a endl
+    local int decremento = --a endl
+    show¿incremento? endl
+    show¿decremento? endl
+!

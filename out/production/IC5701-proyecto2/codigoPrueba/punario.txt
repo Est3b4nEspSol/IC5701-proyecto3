@@ -1,0 +1,58 @@
+coal navidad ¿ ? ¡
+    local int a = 15 endl
+    local int b = 4 endl
+    local int c = -2 endl
+
+    local int suma1 = a + b endl
+    local int suma2 = a + c endl
+    local int suma3 = -a + b endl
+    local int suma4 = -a + -b endl
+
+    local int resta1 = a - b endl
+    local int resta2 = a - c endl
+    local int resta3 = -a - b endl
+    local int resta4 = a - -b endl
+
+    local int mult1 = a * b endl
+    local int mult2 = a * c endl
+    local int mult3 = -a * b endl
+    local int mult4 = -a * -b endl
+
+    local int div1 = a / b endl
+    local int div2 = a / c endl
+    local int div3 = -a / b endl
+
+    local int mod1 = a % b endl
+    local int mod2 = -a % b endl
+    show¿suma1? endl
+    show¿suma2? endl
+    show¿suma3? endl
+    show¿suma4? endl
+    show¿resta1? endl
+    show¿resta2? endl
+    show¿resta3? endl
+    show¿resta4? endl
+    show¿mult1? endl
+    show¿mult2? endl
+    show¿mult3? endl
+    show¿mult4? endl
+    show¿div1? endl
+    show¿div2? endl
+    show¿div3? endl
+    show¿mod1? endl
+
+    local bool cmp1 = a > b endl
+    local bool cmp2 = c < b endl
+    local bool cmp3 = -a < c endl
+    local bool cmp4 = -a > -b endl
+    local bool cmp5 = c == -2 endl
+    local bool cmp6 = -a != a endl
+
+    show¿cmp1? endl
+    show¿cmp2? endl
+    show¿cmp3? endl
+    show¿cmp4? endl
+    show¿cmp5? endl
+    show¿cmp6? endl
+
+!
