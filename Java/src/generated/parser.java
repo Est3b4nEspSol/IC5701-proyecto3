@@ -654,6 +654,15 @@ public class parser extends java_cup.runtime.lr_parser {
         }
     }
 
+        public void genData(String label, String directive) {
+            if (!dataSectionGenerated) {
+                dataSection.append(".data\n");
+                dataSectionGenerated = true;
+            }
+
+            dataSection.append(label).append(": ").append(directive).append("\n");
+        }
+
     public void allocateVariable(String variable) {
         SymInfo sym = symtab.lookup(variable);
         if (sym == null) {
@@ -716,6 +725,11 @@ public class parser extends java_cup.runtime.lr_parser {
 
     public void printCodeMIPS() {
         System.out.println("\n=== CÓDIGO MIPS GENERADO ===\n");
+
+        if (dataSectionGenerated) {
+            System.out.println(dataSection.toString());
+        }
+
         if (textSectionGenerated) {
             System.out.println(textSection.toString());
         }
@@ -2182,10 +2196,9 @@ class CUP$parser$actions {
                           gen("syscall");
 
                       } else if (tipoExpr.equals("string")) {
-                          gen("la $a0, " + temp);
+                          gen("move $a0, " + temp);
                           gen("li $v0, 4");
                           gen("syscall");
-
                       } else if (tipoExpr.equals("bool")) {
                           gen("move $a0, " + temp);
                           gen("li $v0, 1");
@@ -2577,6 +2590,11 @@ class CUP$parser$actions {
 		
         Nodo resultado = new Nodo(lit.toString());
         resultado.setTipo("float");
+
+        String temp = newTemp();
+        gen("li.s " + temp + ", " + lit);
+
+        resultado.setTemp(temp);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exprTerm",11, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2593,6 +2611,17 @@ class CUP$parser$actions {
 		
         Nodo resultado = new Nodo(lit.toString());
         resultado.setTipo("bool");
+
+        String temp = newTemp();
+
+        if (lit.toString().equals("true")) {
+            gen("li " + temp + ", 1");
+        } else {
+            gen("li " + temp + ", 0");
+        }
+
+        resultado.setTemp(temp);
+
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exprTerm",11, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2625,6 +2654,20 @@ class CUP$parser$actions {
 		
         Nodo resultado = new Nodo(lit.toString());
         resultado.setTipo("string");
+
+        String label = "_str_" + labelCounter++;
+        String litValue = lit.toString();
+
+        if (litValue.startsWith("\"") && litValue.endsWith("\"")) {
+            genData(label, ".asciiz " + litValue);
+        } else {
+            genData(label, ".asciiz \"" + litValue + "\"");
+        }
+
+        String temp = newTemp();
+        gen("la " + temp + ", " + label);
+
+        resultado.setTemp(temp);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exprTerm",11, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2698,6 +2741,7 @@ class CUP$parser$actions {
         resultado.addHijo(nodoE);
         resultado.addHijo(new Nodo("?"));
         resultado.setTipo(nodoE.getTipo());
+        resultado.setTemp(nodoE.getTemp());
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("exprTerm",11, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
