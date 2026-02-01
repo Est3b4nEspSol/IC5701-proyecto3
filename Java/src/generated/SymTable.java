@@ -2,8 +2,6 @@ package generated;
 
 import java.util.*;
 
-
-
 public class SymTable {
 
     private Stack<Map<String, SymInfo>> scopes = new Stack<>();
@@ -31,7 +29,7 @@ public class SymTable {
         if (scopes.isEmpty()) return null;
         return scopes.peek().get(name);
     }
-    //Busca
+
     public SymInfo lookup(String name) {
         for (int i = scopes.size() - 1; i >= 0; i--) {
             SymInfo sym = scopes.get(i).get(name);

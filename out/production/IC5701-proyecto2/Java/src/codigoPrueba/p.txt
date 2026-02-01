@@ -2,8 +2,6 @@ coal navidad ¿ ? ¡
     local int a = 10 endl
     local int b = 20 endl
     local int c = 5 endl
-    local float d = 6.2 endl
-    local float e = 6 endl
     local string hola = "prueba" endl
 
     | Operaciones aritméticas
@@ -11,8 +9,8 @@ coal navidad ¿ ? ¡
     local int resta = b - a - c endl
     local int mult = a * b * 2 endl
     local int divEntera = 2 // 3 endl
-    local int modulo = d % a endl
-    local int potencia = d ^ 3 endl
+    local int modulo = a % b endl
+    local int potencia = a ^ b endl
 
     | Operaciones con float
     local float x = 10.5 endl
@@ -21,7 +19,7 @@ coal navidad ¿ ? ¡
     local float multFloat = x * y endl
 
     | Operaciones relacionales
-    local bool mayor = "hola" > 'h' endl
+    local bool mayor = a > b endl
     local bool menor = a < b endl
     local bool igual = a == b endl
     local bool diferente = a != b endl

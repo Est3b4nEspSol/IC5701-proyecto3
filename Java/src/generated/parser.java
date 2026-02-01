@@ -623,8 +623,8 @@ public class parser extends java_cup.runtime.lr_parser {
     private int currentTemp = 0;
     private int frameSize = 0;
 
-    StringBuffer textSection = new StringBuffer();
-    StringBuffer dataSection = new StringBuffer();
+    private StringBuffer textSection = new StringBuffer();
+    private StringBuffer dataSection = new StringBuffer();
     private boolean dataSectionGenerated = false;
     private boolean textSectionGenerated = false;
 
@@ -640,12 +640,15 @@ public class parser extends java_cup.runtime.lr_parser {
 
     public void initTextSection() {
         if (!textSectionGenerated) {
-            gen(".text");
-            gen(".globl main");
-            gen("main:");
-            gen("    jal navidad");
-            gen("    li $v0, 10");
-            gen("    syscall");
+            String textSectionCode = ".text\n" +
+                                    ".globl main\n" +
+                                    "main:\n" +
+                                    "    jal navidad\n" +
+                                    "    li $v0, 10\n" +
+                                    "    syscall\n";
+
+            textSection.insert(0, textSectionCode);
+
             textSectionGenerated = true;
         }
     }
@@ -797,12 +800,14 @@ class CUP$parser$actions {
 		int mfright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object mf = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-        initTextSection();
+
+
         Nodo raizNodo = new Nodo("program");
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
         raizNodo.addHijo((Nodo)mf);
         arbol = new ArbolSintactico(raizNodo);
+        initTextSection();
         RESULT = raizNodo;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("program",0, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -820,6 +825,8 @@ class CUP$parser$actions {
 		int flright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object fl = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+
+
         if (!oneMain) {
             System.err.println("ERROR SEMÁNTICO: No se encontró la función main");
             errorCount++;
@@ -828,6 +835,7 @@ class CUP$parser$actions {
         raizNodo.addHijo((Nodo)sl);
         raizNodo.addHijo((Nodo)fl);
         arbol = new ArbolSintactico(raizNodo);
+        initTextSection();
         RESULT = raizNodo;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("program",0, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -843,10 +851,10 @@ class CUP$parser$actions {
         currentTemp = 0;
 
         gen("navidad:");
-        gen("    addi $sp, $sp, -8");
-        gen("    sw $fp, 4($sp)");
-        gen("    sw $ra, 0($sp)");
-        gen("    addi $fp, $sp, 4");
+        gen("addi $sp, $sp, -8");
+        gen("sw $ra, 4($sp)");
+        gen("sw $fp, 0($sp)");
+        gen("move $fp, $sp");
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$0",37, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -868,10 +876,11 @@ class CUP$parser$actions {
         }
         oneMain = true;
 
-        gen("    lw $ra, 0($sp)");
-        gen("    lw $fp, 4($sp)");
-        gen("    addi $sp, $sp, " + (8 + frameSize));
-        gen("    jr $ra");
+        gen("move $sp, $fp");
+        gen("lw $ra, 4($sp)");
+        gen("lw $fp, 0($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
 
         Nodo resultado = new Nodo("mainFunction");
         resultado.addHijo(new Nodo("coal"));
@@ -888,15 +897,15 @@ class CUP$parser$actions {
             {
               Object RESULT =null;
 
-        frameSize = 0;
-        currentTemp = 0;
+              frameSize = 0;
+              currentTemp = 0;
 
-        gen("navidad:");
-        gen("    addi $sp, $sp, -8");
-        gen("    sw $fp, 4($sp)");
-        gen("    sw $ra, 0($sp)");
-        gen("    addi $fp, $sp, 4");
-    
+              gen("navidad:");
+              gen("addi $sp, $sp, -8");
+              gen("sw $ra, 4($sp)");
+              gen("sw $fp, 0($sp)");
+              gen("move $fp, $sp");
+          
               CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$1",38, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -911,23 +920,24 @@ class CUP$parser$actions {
 		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object b = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
-        if (oneMain) {
-            System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
-            errorCount++;
-        }
-        oneMain = true;
+              if (oneMain) {
+                  System.err.println("ERROR SEMÁNTICO: Solo puede haber una función main");
+                  errorCount++;
+              }
+              oneMain = true;
 
-        gen("    lw $ra, 0($sp)");
-        gen("    lw $fp, 4($sp)");
-        gen("    addi $sp, $sp, " + (8 + frameSize));
-        gen("    jr $ra");
+              gen("move $sp, $fp");
+              gen("lw $ra, 4($sp)");
+              gen("lw $fp, 0($sp)");
+              gen("addi $sp, $sp, 8");
+              gen("jr $ra");
 
-        Nodo resultado = new Nodo("mainFunction");
-        resultado.addHijo(new Nodo("coal"));
-        resultado.addHijo(new Nodo("navidad"));
-        resultado.addHijo((Nodo)b);
-        RESULT = resultado;
-    
+              Nodo resultado = new Nodo("mainFunction");
+              resultado.addHijo(new Nodo("coal"));
+              resultado.addHijo(new Nodo("navidad"));
+              resultado.addHijo((Nodo)b);
+              RESULT = resultado;
+          
               CUP$parser$result = parser.getSymbolFactory().newSymbol("mainFunction",2, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-5)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2146,7 +2156,42 @@ class CUP$parser$actions {
             System.err.println("ERROR SEMÁNTICO (Línea " + (eleft+1) + " Columna " + (eright+1) +
                              "): show solo acepta int, float, char, string o bool. Se encontró: " + tipoExpr);
             errorCount++;
-        }
+    } else {
+
+                  String temp = nodoE.getTemp();
+
+                  if (temp != null) {
+                      if (tipoExpr.equals("int")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 1");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("float")) {
+                          gen("mov.s $f12, " + temp);
+                          gen("li $v0, 2");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("char")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 11");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("string")) {
+                          gen("la $a0, " + temp);
+                          gen("li $v0, 4");
+                          gen("syscall");
+
+                      } else if (tipoExpr.equals("bool")) {
+                          gen("move $a0, " + temp);
+                          gen("li $v0, 1");
+                          gen("syscall");
+                      }
+
+                      gen("li $a0, 10");
+                      gen("li $v0, 11");
+                      gen("syscall");
+                  }
+              }
 
         Nodo resultado = new Nodo("showStmt");
         resultado.addHijo(new Nodo("show"));

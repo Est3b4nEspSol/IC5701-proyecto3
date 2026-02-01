@@ -10,6 +10,7 @@ gift int func ¿ int a, int b ? ¡
 !
 
 world bool flager = true endl
+world int i = 2 endl
 
 gift float _mi_ ¿ int _dif_, char _otra_ ? ¡
     local int _otra_ endl
@@ -20,9 +21,9 @@ gift float _mi_ ¿ int _dif_, char _otra_ ? ¡
 
     for ¿ int i = 0 endl i < 10 endl ++i ? ¡
        loop
-          local int _var_2 = 1 endl
+          local int i = 1 endl
           local int _var_ = _var_2 - 1 endl
-          exit when _var_2 > 12 @ 12 > 34 endl
+          exit when i > 12 @ 12 > 34 endl
        end loop endl
 
        local int g = 10 endl

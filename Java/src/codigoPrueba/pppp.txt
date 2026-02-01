@@ -2,4 +2,5 @@ coal navidad ¿ ? ¡
     local int a = 5 endl
     local int b = 3 endl
     local int resultado = a + b endl
+    show¿resultado? endl
 !

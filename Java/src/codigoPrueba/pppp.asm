@@ -1,8 +1,14 @@
+.text
+.globl main
+main:
+    jal navidad
+    li $v0, 10
+    syscall
 navidad:
-    addi $sp, $sp, -8
-    sw $fp, 4($sp)
-    sw $ra, 0($sp)
-    addi $fp, $sp, 4
+addi $sp, $sp, -8
+sw $ra, 4($sp)
+sw $fp, 0($sp)
+move $fp, $sp
 li $t0, 5
 addi $sp, $sp, -4
 sw $t0, -4($fp)
@@ -14,13 +20,15 @@ lw $t3, -8($fp)
 add $t4, $t2, $t3
 addi $sp, $sp, -4
 sw $t4, -12($fp)
-    lw $ra, 0($sp)
-    lw $fp, 4($sp)
-    addi $sp, $sp, 20
-    jr $ra
-.text
-.globl main
-main:
-    jal navidad
-    li $v0, 10
-    syscall
+lw $t5, -12($fp)
+move $a0, $t5
+li $v0, 1
+syscall
+li $a0, 10
+li $v0, 11
+syscall
+move $sp, $fp
+lw $ra, 4($sp)
+lw $fp, 0($sp)
+addi $sp, $sp, 8
+jr $ra
