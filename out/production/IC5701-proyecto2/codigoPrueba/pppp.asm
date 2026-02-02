@@ -66,6 +66,10 @@ syscall
 li $a0, 10
 li $v0, 11
 syscall
+beqz $t7, decide_next_2
+j decide_end_1
+decide_next_2:
+decide_end_1:
 move $sp, $fp
 lw $ra, 4($sp)
 lw $fp, 0($sp)

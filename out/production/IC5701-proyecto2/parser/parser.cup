@@ -772,6 +772,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array '" + id + "' ya declarado en este ámbito");
             errorCount++;
         }
+        int filas = d1;
+        int columnas = d2;
+        int size = filas * columnas * 4;
+
+        gen("addi $sp, $sp, -" + size);
+
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ENDL
@@ -796,6 +802,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array global '" + id + "' ya declarado");
             errorCount++;
         }
+        int filas = d1;
+        int columnas = d2;
+        int size = filas * columnas * 4;
+
+        gen("addi $sp, $sp, -" + size);
+
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -822,6 +834,12 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array global '" + id + "' ya declarado");
             errorCount++;
         }
+        int filas = d1;
+        int columnas = d2;
+        int size = filas * columnas * 4;
+
+        gen("addi $sp, $sp, -" + size);
+
         RESULT = resultado;
     :};
 
