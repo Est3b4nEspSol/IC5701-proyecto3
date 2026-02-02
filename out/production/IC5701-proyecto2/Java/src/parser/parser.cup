@@ -13,10 +13,15 @@ parser code {:
     boolean oneMain = false;
     int errorCount = 0;
 
+    //Manejo del For
     private String[] currentForLabels = null;
     private int forIncrementCodeStart = -1;
     private int forBlockCodeStart = -1;
     private String savedIncrementCode = null;
+
+    //Manejo del loop
+    private String[] currentLoopLabels = null;
+
     private int currentTemp = 0;
     private int frameSize = 0;
 
@@ -1194,6 +1199,10 @@ elsePart ::=
 loopStmt ::= LOOP
     {:
         insideLoop++;
+        String labelStart = newLabel("loop_start");
+        String labelEnd = newLabel("loop_end");
+        gen(labelStart + ":");
+        parser.currentLoopLabels = new String[]{labelStart, labelEnd};
     :}
     statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
     {:
@@ -1209,7 +1218,22 @@ loopStmt ::= LOOP
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
+
+        String[] labels = currentLoopLabels;
+        String tempCondicion = nodoE.getTemp();
+
+        if (tempCondicion == null) {
+            System.err.println("ERROR: Condición de exit when no generó temporal");
+            errorCount++;
+        } else {
+            gen("bnez " + tempCondicion + ", " + labels[1]);
+            gen("j " + labels[0]);
+        }
+
+        gen(labels[1] + ":");
+
         insideLoop--;
+        currentLoopLabels = null;
 
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));
