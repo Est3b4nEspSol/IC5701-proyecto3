@@ -1,5 +1,4 @@
 world int x = 5 endl
-
 coal navidad ¿ ? ¡
     local int a = 4 endl
     local int b = 3 endl
@@ -15,5 +14,8 @@ coal navidad ¿ ? ¡
            show ¿ "entra al if" ?  endl
             !
     end decide endl
-
 !
+
+
+
+

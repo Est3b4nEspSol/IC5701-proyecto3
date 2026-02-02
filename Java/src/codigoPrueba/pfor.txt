@@ -1,6 +1,8 @@
 coal navidad ¿? ¡
-
     for ¿int i = 0 endl i < 10 endl ++i? ¡
         show¿i? endl
     !
 !
+
+
+

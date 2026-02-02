@@ -1,11 +1,12 @@
 gift int fun1 ¿ ? ¡
     return 5 endl
 !
-
 gift int fun2 ¿ ? ¡
     return 5 endl
 !
-
 coal navidad ¡
     show ¿ fun1 ¿ ? + fun2 ¿ ? ? endl
 !
+
+
+
