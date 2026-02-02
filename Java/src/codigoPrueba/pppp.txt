@@ -1,8 +1,12 @@
 world int x = 5 endl
 
 coal navidad ¿ ? ¡
-    local int a = 5 endl
+    local int a = 4 endl
     local int b = 3 endl
     local int resultado = a + b endl
+    show¿resultado? endl
+    get ¿ a ? endl
+    show ¿ a ? endl
+    resultado = a + b endl
     show¿resultado? endl
 !

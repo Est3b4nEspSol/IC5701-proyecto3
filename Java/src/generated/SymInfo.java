@@ -9,6 +9,7 @@ class SymInfo {
     public SymKind kind;
     public int line;
     public int column;
+    public boolean allocated = false;
 
     public int offset;          // Desplazamiento en la pila
     public int paramCount;      // Número de parámetros (para funciones)

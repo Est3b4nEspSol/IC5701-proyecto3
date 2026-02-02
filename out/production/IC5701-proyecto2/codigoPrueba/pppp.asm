@@ -10,20 +10,43 @@ addi $sp, $sp, -8
 sw $ra, 4($sp)
 sw $fp, 0($sp)
 move $fp, $sp
-li $t0, 5
+li $t0, 4
 addi $sp, $sp, -4
 sw $t0, -4($fp)
-li $t1, 2
-li $t2, 3
+li $t1, 3
 addi $sp, $sp, -4
-sw $t2, -8($fp)
-lw $t3, -4($fp)
-lw $t4, -8($fp)
-add $t5, $t3, $t4
+sw $t1, -8($fp)
+lw $t2, -4($fp)
+lw $t3, -8($fp)
+lw $t5, -4($fp)
+lw $t6, -8($fp)
+add $t4, $t5, $t6
 addi $sp, $sp, -4
-sw $t5, -12($fp)
-lw $t6, -12($fp)
-move $a0, $t6
+sw $t4, -12($fp)
+lw $t7, -12($fp)
+move $a0, $t7
+li $v0, 1
+syscall
+li $a0, 10
+li $v0, 11
+syscall
+li $v0, 5
+syscall
+sw $v0, -4($fp)
+lw $t8, -4($fp)
+move $a0, $t8
+li $v0, 1
+syscall
+li $a0, 10
+li $v0, 11
+syscall
+lw $t9, -4($fp)
+lw $t0, -8($fp)
+lw $t2, -4($fp)
+lw $t3, -8($fp)
+add $t1, $t2, $t3
+lw $t4, -12($fp)
+move $a0, $t4
 li $v0, 1
 syscall
 li $a0, 10
