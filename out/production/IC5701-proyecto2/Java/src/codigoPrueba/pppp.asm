@@ -45,6 +45,7 @@ lw $t0, -8($fp)
 lw $t2, -4($fp)
 lw $t3, -8($fp)
 add $t1, $t2, $t3
+sw $t1, -12($fp)
 lw $t4, -12($fp)
 move $a0, $t4
 li $v0, 1
