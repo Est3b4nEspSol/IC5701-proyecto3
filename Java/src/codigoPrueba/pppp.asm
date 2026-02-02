@@ -1,3 +1,6 @@
+.data
+_str_0: .asciiz "entra al if"
+
 .text
 .globl main
 main:
@@ -53,6 +56,20 @@ syscall
 li $a0, 10
 li $v0, 11
 syscall
+li $t5, 10
+li $t6, 4
+slt $t7, $t6, $t5
+la $t8, _str_0
+move $a0, $t8
+li $v0, 4
+syscall
+li $a0, 10
+li $v0, 11
+syscall
+beqz $t7, decide_next_2
+j decide_end_1
+decide_next_2:
+decide_end_1:
 move $sp, $fp
 lw $ra, 4($sp)
 lw $fp, 0($sp)

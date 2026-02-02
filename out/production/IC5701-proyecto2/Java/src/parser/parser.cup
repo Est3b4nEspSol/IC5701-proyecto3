@@ -13,15 +13,10 @@ parser code {:
     boolean oneMain = false;
     int errorCount = 0;
 
-    //Manejo del For
     private String[] currentForLabels = null;
     private int forIncrementCodeStart = -1;
     private int forBlockCodeStart = -1;
     private String savedIncrementCode = null;
-
-    //Manejo del loop
-    private String[] currentLoopLabels = null;
-
     private int currentTemp = 0;
     private int frameSize = 0;
 
@@ -1130,17 +1125,57 @@ getStmt ::= GET LPAREN IDENTIFIER:id RPAREN ENDL
 
 /* 20. DECIDE OF */
 ifStmt ::= DECIDE OF conditionList:cl elsePart:ep END DECIDE ENDL
-    {:
-        Nodo resultado = new Nodo("decideOf");
-        resultado.addHijo(new Nodo("decide"));
-        resultado.addHijo(new Nodo("of"));
-        resultado.addHijo((Nodo)cl);
-        resultado.addHijo((Nodo)ep);
-        resultado.addHijo(new Nodo("end"));
-        resultado.addHijo(new Nodo("decide"));
-        resultado.addHijo(new Nodo("endl"));
-        RESULT = resultado;
-    :};
+{:
+    Nodo nodoIf = new Nodo("decide");
+
+    String endLabel = newLabel("decide_end");
+
+    Nodo listaCondiciones = (Nodo) cl;
+
+    /* recorrer condiciones */
+    for (int i = 0; i < listaCondiciones.hijos.size(); i++) {
+
+        Nodo condicion = listaCondiciones.hijos.get(i);
+
+        Nodo expr  = condicion.hijos.get(0); // expression
+        Nodo block = condicion.hijos.get(2); // block
+
+        String nextLabel = newLabel("decide_next");
+
+        /* el temp de la expresión YA existe */
+        String condTemp = expr.getTemp();
+
+        /* if (!cond) goto siguiente condición */
+        gen("beqz " + condTemp + ", " + nextLabel);
+
+        /* el bloque genera su propio código */
+        gen("j " + endLabel);
+
+        /* siguiente condición */
+        gen(nextLabel + ":");
+    }
+
+    /* ELSE (si existe) */
+    Nodo elseNodo = (Nodo) ep;
+    if (elseNodo != null && !elseNodo.hijos.isEmpty()) {
+        Nodo elseBlock = elseNodo.hijos.get(2); // block
+        // el código del bloque ya fue generado
+    }
+
+    gen(endLabel + ":");
+
+    /* árbol sintáctico */
+    nodoIf.addHijo(new Nodo("decide"));
+    nodoIf.addHijo(new Nodo("of"));
+    nodoIf.addHijo(listaCondiciones);
+    nodoIf.addHijo((Nodo) ep);
+    nodoIf.addHijo(new Nodo("end"));
+    nodoIf.addHijo(new Nodo("decide"));
+    nodoIf.addHijo(new Nodo("endl"));
+
+    RESULT = nodoIf;
+:};
+
 
 /* 21. LISTA DE CONDICIONES */
 conditionList ::= condition:c
@@ -1199,10 +1234,6 @@ elsePart ::=
 loopStmt ::= LOOP
     {:
         insideLoop++;
-        String labelStart = newLabel("loop_start");
-        String labelEnd = newLabel("loop_end");
-        gen(labelStart + ":");
-        parser.currentLoopLabels = new String[]{labelStart, labelEnd};
     :}
     statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
     {:
@@ -1218,22 +1249,7 @@ loopStmt ::= LOOP
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
-
-        String[] labels = currentLoopLabels;
-        String tempCondicion = nodoE.getTemp();
-
-        if (tempCondicion == null) {
-            System.err.println("ERROR: Condición de exit when no generó temporal");
-            errorCount++;
-        } else {
-            gen("bnez " + tempCondicion + ", " + labels[1]);
-            gen("j " + labels[0]);
-        }
-
-        gen(labels[1] + ":");
-
         insideLoop--;
-        currentLoopLabels = null;
 
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));

@@ -628,15 +628,10 @@ public class parser extends java_cup.runtime.lr_parser {
     boolean oneMain = false;
     int errorCount = 0;
 
-    //Manejo del For
     private String[] currentForLabels = null;
     private int forIncrementCodeStart = -1;
     private int forBlockCodeStart = -1;
     private String savedIncrementCode = null;
-
-    //Manejo del loop
-    private String[] currentLoopLabels = null;
-
     private int currentTemp = 0;
     private int frameSize = 0;
 
@@ -2339,16 +2334,55 @@ class CUP$parser$actions {
 		int epright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-3)).right;
 		Object ep = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-3)).value;
 		
-        Nodo resultado = new Nodo("decideOf");
-        resultado.addHijo(new Nodo("decide"));
-        resultado.addHijo(new Nodo("of"));
-        resultado.addHijo((Nodo)cl);
-        resultado.addHijo((Nodo)ep);
-        resultado.addHijo(new Nodo("end"));
-        resultado.addHijo(new Nodo("decide"));
-        resultado.addHijo(new Nodo("endl"));
-        RESULT = resultado;
-    
+    Nodo nodoIf = new Nodo("decide");
+
+    String endLabel = newLabel("decide_end");
+
+    Nodo listaCondiciones = (Nodo) cl;
+
+    /* recorrer condiciones */
+    for (int i = 0; i < listaCondiciones.hijos.size(); i++) {
+
+        Nodo condicion = listaCondiciones.hijos.get(i);
+
+        Nodo expr  = condicion.hijos.get(0); // expression
+        Nodo block = condicion.hijos.get(2); // block
+
+        String nextLabel = newLabel("decide_next");
+
+        /* el temp de la expresión YA existe */
+        String condTemp = expr.getTemp();
+
+        /* if (!cond) goto siguiente condición */
+        gen("beqz " + condTemp + ", " + nextLabel);
+
+        /* el bloque genera su propio código */
+        gen("j " + endLabel);
+
+        /* siguiente condición */
+        gen(nextLabel + ":");
+    }
+
+    /* ELSE (si existe) */
+    Nodo elseNodo = (Nodo) ep;
+    if (elseNodo != null && !elseNodo.hijos.isEmpty()) {
+        Nodo elseBlock = elseNodo.hijos.get(2); // block
+        // el código del bloque ya fue generado
+    }
+
+    gen(endLabel + ":");
+
+    /* árbol sintáctico */
+    nodoIf.addHijo(new Nodo("decide"));
+    nodoIf.addHijo(new Nodo("of"));
+    nodoIf.addHijo(listaCondiciones);
+    nodoIf.addHijo((Nodo) ep);
+    nodoIf.addHijo(new Nodo("end"));
+    nodoIf.addHijo(new Nodo("decide"));
+    nodoIf.addHijo(new Nodo("endl"));
+
+    RESULT = nodoIf;
+
               CUP$parser$result = parser.getSymbolFactory().newSymbol("ifStmt",27, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-6)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2459,10 +2493,6 @@ class CUP$parser$actions {
               Object RESULT =null;
 
         insideLoop++;
-        String labelStart = newLabel("loop_start");
-        String labelEnd = newLabel("loop_end");
-        gen(labelStart + ":");
-        parser.currentLoopLabels = new String[]{labelStart, labelEnd};
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$4",41, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2493,22 +2523,7 @@ class CUP$parser$actions {
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
-
-        String[] labels = currentLoopLabels;
-        String tempCondicion = nodoE.getTemp();
-
-        if (tempCondicion == null) {
-            System.err.println("ERROR: Condición de exit when no generó temporal");
-            errorCount++;
-        } else {
-            gen("bnez " + tempCondicion + ", " + labels[1]);
-            gen("j " + labels[0]);
-        }
-
-        gen(labels[1] + ":");
-
         insideLoop--;
-        currentLoopLabels = null;
 
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));

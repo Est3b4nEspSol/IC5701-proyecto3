@@ -1,3 +1,6 @@
+.data
+_str_0: .asciiz "entra al if"
+
 .text
 .globl main
 main:
@@ -49,6 +52,16 @@ sw $t1, -12($fp)
 lw $t4, -12($fp)
 move $a0, $t4
 li $v0, 1
+syscall
+li $a0, 10
+li $v0, 11
+syscall
+li $t5, 10
+li $t6, 4
+slt $t7, $t6, $t5
+la $t8, _str_0
+move $a0, $t8
+li $v0, 4
 syscall
 li $a0, 10
 li $v0, 11

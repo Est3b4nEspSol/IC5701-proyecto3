@@ -9,4 +9,11 @@ coal navidad ¿ ? ¡
     show ¿ a ? endl
     resultado = a + b endl
     show¿resultado? endl
+    decide of
+        ¿ 10 > 4 ?  ->
+         ¡
+           show ¿ "entra al if" ?  endl
+            !
+    end decide endl
+
 !
