@@ -12,7 +12,7 @@ parser code {:
     int insideLoop = 0;
     boolean oneMain = false;
     int errorCount = 0;
-
+    private String[] currentLoopLabels = null;
     private String[] currentForLabels = null;
     private int forIncrementCodeStart = -1;
     private int forBlockCodeStart = -1;
@@ -338,10 +338,26 @@ functionDecl ::=
                               "): Función '" + id + "' ya declarada");
              errorCount++;
          }
+         initTextSection();
+         gen(id + ":");
+
+         /* prólogo */
+         gen("addi $sp, $sp, -8");
+         gen("sw $fp, 4($sp)");
+         gen("sw $ra, 0($sp)");
+         gen("move $fp, $sp");
+
+         frameSize = 0;
          symtab.enterScope();
      :}
      LPAREN paramList:pl RPAREN block:b
      {:
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
+
         currentFunctionReturnType = null;
          symtab.exitScope();
 
@@ -377,6 +393,31 @@ funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
             errorCount++;
         }
 
+        Nodo args = (Nodo) al;
+
+        /* empujar argumentos (derecha a izquierda) */
+        for (int i = args.hijos.size() - 1; i >= 0; i--) {
+            Nodo h = args.hijos.get(i);
+            if (h.lexema.equals(",")) continue;
+
+            String t = h.getTemp();
+            gen("addi $sp, $sp, -4");
+            gen("sw " + t + ", 0($sp)");
+        }
+
+        /* llamada */
+        gen("jal " + id);
+
+        /* limpiar argumentos */
+        int argCount = 0;
+        for (Nodo h : args.hijos) {
+            if (!h.lexema.equals(",")) argCount++;
+        }
+        if (argCount > 0) {
+            gen("addi $sp, $sp, " + (argCount * 4));
+        }
+
+
         Nodo resultado = new Nodo("funcall");
         Nodo idNode = new Nodo(id.toString());
 
@@ -384,6 +425,8 @@ funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
             idNode.setTipo(func.type);
             resultado.setTipo(func.type);
         }
+        resultado.setTipo(func.type);
+        resultado.setTemp("$v0");   // valor de retorno
 
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("¿"));
@@ -464,6 +507,7 @@ param ::= type:t IDENTIFIER:id
                              "): Parámetro '" + id + "' duplicado");
             errorCount++;
         }
+        allocateVariable((String)id);
         RESULT = resultado;
     :};
 
@@ -772,12 +816,6 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array '" + id + "' ya declarado en este ámbito");
             errorCount++;
         }
-        int filas = d1;
-        int columnas = d2;
-        int size = filas * columnas * 4;
-
-        gen("addi $sp, $sp, -" + size);
-
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ENDL
@@ -802,12 +840,6 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array global '" + id + "' ya declarado");
             errorCount++;
         }
-        int filas = d1;
-        int columnas = d2;
-        int size = filas * columnas * 4;
-
-        gen("addi $sp, $sp, -" + size);
-
         RESULT = resultado;
     :}
     | WORLD type:t IDENTIFIER:id dimensions:d ASSIGN arrayLiteral:al ENDL
@@ -834,12 +866,6 @@ arrayDecl ::= LOCAL type:t IDENTIFIER:id dimensions:d ENDL
                              "): Array global '" + id + "' ya declarado");
             errorCount++;
         }
-        int filas = d1;
-        int columnas = d2;
-        int size = filas * columnas * 4;
-
-        gen("addi $sp, $sp, -" + size);
-
         RESULT = resultado;
     :};
 
@@ -1252,6 +1278,10 @@ elsePart ::=
 loopStmt ::= LOOP
     {:
         insideLoop++;
+        String labelStart = newLabel("loop_start");
+        String labelEnd = newLabel("loop_end");
+        gen(labelStart + ":");
+        parser.currentLoopLabels = new String[]{labelStart, labelEnd};
     :}
     statementList:sl EXIT WHEN expression:e ENDL END LOOP ENDL
     {:
@@ -1267,7 +1297,22 @@ loopStmt ::= LOOP
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
+
+        String[] labels = currentLoopLabels;
+        String tempCondicion = nodoE.getTemp();
+
+        if (tempCondicion == null) {
+            System.err.println("ERROR: Condición de exit when no generó temporal");
+            errorCount++;
+        } else {
+            gen("bnez " + tempCondicion + ", " + labels[1]);
+            gen("j " + labels[0]);
+        }
+
+        gen(labels[1] + ":");
+
         insideLoop--;
+        currentLoopLabels = null;
 
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));
@@ -1397,6 +1442,14 @@ returnStmt ::= RETURN expression:e ENDL
                              ", se encontró: " + tipoExpr);
             errorCount++;
         }
+        gen("move $v0, " + nodoE.getTemp());
+
+        /* salto al epílogo */
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
 
         Nodo resultado = new Nodo("returnStmt");
         resultado.addHijo(new Nodo("return"));

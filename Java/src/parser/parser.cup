@@ -338,10 +338,26 @@ functionDecl ::=
                               "): Función '" + id + "' ya declarada");
              errorCount++;
          }
+         initTextSection();
+         gen(id + ":");
+
+         /* prólogo */
+         gen("addi $sp, $sp, -8");
+         gen("sw $fp, 4($sp)");
+         gen("sw $ra, 0($sp)");
+         gen("move $fp, $sp");
+
+         frameSize = 0;
          symtab.enterScope();
      :}
      LPAREN paramList:pl RPAREN block:b
      {:
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
+
         currentFunctionReturnType = null;
          symtab.exitScope();
 
@@ -377,6 +393,31 @@ funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
             errorCount++;
         }
 
+        Nodo args = (Nodo) al;
+
+        /* empujar argumentos (derecha a izquierda) */
+        for (int i = args.hijos.size() - 1; i >= 0; i--) {
+            Nodo h = args.hijos.get(i);
+            if (h.lexema.equals(",")) continue;
+
+            String t = h.getTemp();
+            gen("addi $sp, $sp, -4");
+            gen("sw " + t + ", 0($sp)");
+        }
+
+        /* llamada */
+        gen("jal " + id);
+
+        /* limpiar argumentos */
+        int argCount = 0;
+        for (Nodo h : args.hijos) {
+            if (!h.lexema.equals(",")) argCount++;
+        }
+        if (argCount > 0) {
+            gen("addi $sp, $sp, " + (argCount * 4));
+        }
+
+
         Nodo resultado = new Nodo("funcall");
         Nodo idNode = new Nodo(id.toString());
 
@@ -384,6 +425,8 @@ funcall ::= IDENTIFIER:id LPAREN arglist:al RPAREN
             idNode.setTipo(func.type);
             resultado.setTipo(func.type);
         }
+        resultado.setTipo(func.type);
+        resultado.setTemp("$v0");   // valor de retorno
 
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("¿"));
@@ -464,6 +507,7 @@ param ::= type:t IDENTIFIER:id
                              "): Parámetro '" + id + "' duplicado");
             errorCount++;
         }
+        allocateVariable((String)id);
         RESULT = resultado;
     :};
 
@@ -1398,6 +1442,14 @@ returnStmt ::= RETURN expression:e ENDL
                              ", se encontró: " + tipoExpr);
             errorCount++;
         }
+        gen("move $v0, " + nodoE.getTemp());
+
+        /* salto al epílogo */
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
 
         Nodo resultado = new Nodo("returnStmt");
         resultado.addHijo(new Nodo("return"));

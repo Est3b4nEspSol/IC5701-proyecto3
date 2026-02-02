@@ -627,7 +627,7 @@ public class parser extends java_cup.runtime.lr_parser {
     int insideLoop = 0;
     boolean oneMain = false;
     int errorCount = 0;
-
+    private String[] currentLoopLabels = null;
     private String[] currentForLabels = null;
     private int forIncrementCodeStart = -1;
     private int forBlockCodeStart = -1;
@@ -1023,6 +1023,16 @@ class CUP$parser$actions {
                               "): Función '" + id + "' ya declarada");
              errorCount++;
          }
+         initTextSection();
+         gen(id + ":");
+
+         /* prólogo */
+         gen("addi $sp, $sp, -8");
+         gen("sw $fp, 4($sp)");
+         gen("sw $ra, 0($sp)");
+         gen("move $fp, $sp");
+
+         frameSize = 0;
          symtab.enterScope();
      
               CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$2",39, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -1048,6 +1058,12 @@ class CUP$parser$actions {
 		int bright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Object b = (Object)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
 		
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
+
         currentFunctionReturnType = null;
          symtab.exitScope();
 
@@ -1095,6 +1111,31 @@ class CUP$parser$actions {
             errorCount++;
         }
 
+        Nodo args = (Nodo) al;
+
+        /* empujar argumentos (derecha a izquierda) */
+        for (int i = args.hijos.size() - 1; i >= 0; i--) {
+            Nodo h = args.hijos.get(i);
+            if (h.lexema.equals(",")) continue;
+
+            String t = h.getTemp();
+            gen("addi $sp, $sp, -4");
+            gen("sw " + t + ", 0($sp)");
+        }
+
+        /* llamada */
+        gen("jal " + id);
+
+        /* limpiar argumentos */
+        int argCount = 0;
+        for (Nodo h : args.hijos) {
+            if (!h.lexema.equals(",")) argCount++;
+        }
+        if (argCount > 0) {
+            gen("addi $sp, $sp, " + (argCount * 4));
+        }
+
+
         Nodo resultado = new Nodo("funcall");
         Nodo idNode = new Nodo(id.toString());
 
@@ -1102,6 +1143,8 @@ class CUP$parser$actions {
             idNode.setTipo(func.type);
             resultado.setTipo(func.type);
         }
+        resultado.setTipo(func.type);
+        resultado.setTemp("$v0");   // valor de retorno
 
         resultado.addHijo(idNode);
         resultado.addHijo(new Nodo("¿"));
@@ -1251,6 +1294,7 @@ class CUP$parser$actions {
                              "): Parámetro '" + id + "' duplicado");
             errorCount++;
         }
+        allocateVariable((String)id);
         RESULT = resultado;
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("param",19, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
@@ -2493,6 +2537,10 @@ class CUP$parser$actions {
               Object RESULT =null;
 
         insideLoop++;
+        String labelStart = newLabel("loop_start");
+        String labelEnd = newLabel("loop_end");
+        gen(labelStart + ":");
+        parser.currentLoopLabels = new String[]{labelStart, labelEnd};
     
               CUP$parser$result = parser.getSymbolFactory().newSymbol("NT$4",41, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
@@ -2523,7 +2571,22 @@ class CUP$parser$actions {
                              "): La condición de exit when debe ser bool. Se encontró: " + tipoExpr);
             errorCount++;
         }
+
+        String[] labels = currentLoopLabels;
+        String tempCondicion = nodoE.getTemp();
+
+        if (tempCondicion == null) {
+            System.err.println("ERROR: Condición de exit when no generó temporal");
+            errorCount++;
+        } else {
+            gen("bnez " + tempCondicion + ", " + labels[1]);
+            gen("j " + labels[0]);
+        }
+
+        gen(labels[1] + ":");
+
         insideLoop--;
+        currentLoopLabels = null;
 
         Nodo resultado = new Nodo("loopStmt");
         resultado.addHijo(new Nodo("loop"));
@@ -2740,6 +2803,14 @@ class CUP$parser$actions {
                              ", se encontró: " + tipoExpr);
             errorCount++;
         }
+        gen("move $v0, " + nodoE.getTemp());
+
+        /* salto al epílogo */
+        gen("move $sp, $fp");
+        gen("lw $ra, 0($sp)");
+        gen("lw $fp, 4($sp)");
+        gen("addi $sp, $sp, 8");
+        gen("jr $ra");
 
         Nodo resultado = new Nodo("returnStmt");
         resultado.addHijo(new Nodo("return"));

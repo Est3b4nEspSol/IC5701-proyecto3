@@ -7,4 +7,5 @@ gift int fun2 ¿ ? ¡
 !
 
 coal navidad ¡
+    show ¿ fun1 ¿ ? + fun2 ¿ ? ? endl
 !
