@@ -1484,7 +1484,6 @@ logicalExpression ::= relationalExpression:re
         }
 
         Nodo resultado = new Nodo("~");
-        resultado.setOperador("OR");
         resultado.setTipo("bool");
         resultado.addHijo(nodoLe);
         resultado.addHijo(nodoRe);
@@ -1532,7 +1531,6 @@ logicalExpression ::= relationalExpression:re
         }
 
         Nodo resultado = new Nodo("@");
-        resultado.setOperador("AND");
         resultado.setTipo("bool");
         resultado.addHijo(nodoLe);
         resultado.addHijo(nodoRe);
@@ -1578,7 +1576,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo("==");
-        resultado.setOperador("EQ");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1628,7 +1625,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo("!=");
-        resultado.setOperador("NE");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1697,7 +1693,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo("<");
-        resultado.setOperador("LT");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1761,7 +1756,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo("<=");
-        resultado.setOperador("LE");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1826,7 +1820,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo(">");
-        resultado.setOperador("GT");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1889,7 +1882,6 @@ relationalExpression ::= additiveExpression:ae
         }
 
         Nodo resultado = new Nodo(">=");
-        resultado.setOperador("GE");
         resultado.setTipo("bool");
         resultado.addHijo(nodoAe1);
         resultado.addHijo(nodoAe2);
@@ -1960,7 +1952,6 @@ additiveExpression ::= multiplicativeExpression:me
         }
 
         Nodo resultado = new Nodo("+");
-        resultado.setOperador("ADD");
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoAe);
         resultado.addHijo(nodoMe);
@@ -2040,7 +2031,6 @@ additiveExpression ::= multiplicativeExpression:me
         }
 
         Nodo resultado = new Nodo("-");
-        resultado.setOperador("SUB");
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoAe);
         resultado.addHijo(nodoMe);
@@ -2103,7 +2093,6 @@ multiplicativeExpression ::= powerExpression:pe
         }
 
         Nodo resultado = new Nodo("*");
-        resultado.setOperador("MULT");
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
@@ -2160,7 +2149,6 @@ multiplicativeExpression ::= powerExpression:pe
         }
 
         Nodo resultado = new Nodo("/");
-        resultado.setOperador("DIV");
         resultado.setTipo(tipo1.equals("error") ? "error" : tipo1);
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
@@ -2212,7 +2200,6 @@ multiplicativeExpression ::= powerExpression:pe
         }
 
         Nodo resultado = new Nodo("//");
-        resultado.setOperador("DIV_INT");
         resultado.setTipo("int");
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
@@ -2260,7 +2247,6 @@ multiplicativeExpression ::= powerExpression:pe
         }
 
         Nodo resultado = new Nodo("%");
-        resultado.setOperador("MOD");
         resultado.setTipo("int");
         resultado.addHijo(nodoMe);
         resultado.addHijo(nodoPe);
@@ -2314,7 +2300,6 @@ powerExpression ::= unaryExpression:ue
         }
 
         Nodo resultado = new Nodo("^");
-        resultado.setOperador("POW");
         resultado.setTipo("int");
         resultado.addHijo(nodoUe);
         resultado.addHijo(nodoPe);
@@ -2365,7 +2350,6 @@ unaryExpression ::= exprTerm:et
         }
 
         Nodo resultado = new Nodo("minus");
-        resultado.setOperador("NEG");
         resultado.setTipo(tipo);
         resultado.addHijo(nodoUe);
 
@@ -2400,7 +2384,6 @@ unaryExpression ::= exprTerm:et
         }
 
         Nodo resultado = new Nodo("not");
-        resultado.setOperador("NOT");
         resultado.setTipo("bool");
         resultado.addHijo(nodoUe);
 
@@ -2432,7 +2415,6 @@ unaryExpression ::= exprTerm:et
         }
 
         Nodo resultado = new Nodo("increment");
-        resultado.setOperador("INC");
         resultado.setTipo(tipo);
 
         Nodo idNode = new Nodo(id.toString());
@@ -2475,7 +2457,6 @@ unaryExpression ::= exprTerm:et
         }
 
         Nodo resultado = new Nodo("decrement");
-        resultado.setOperador("DEC");
         resultado.setTipo(tipo);
 
         Nodo idNode = new Nodo(id.toString());
