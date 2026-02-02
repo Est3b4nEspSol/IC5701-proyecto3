@@ -1,0 +1,8 @@
+coal navidad ¿? ¡
+    local int contador = 0 endl
+    loop
+        show¿contador? endl
+        contador = contador + 1 endl
+        exit when contador == 5 endl
+    end loop endl
+!

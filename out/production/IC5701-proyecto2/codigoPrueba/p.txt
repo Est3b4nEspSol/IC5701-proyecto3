@@ -12,34 +12,6 @@ coal navidad ¿ ? ¡
     local int modulo = a % b endl
     local int potencia = a ^ b endl
 
-    | Operaciones con float
-    local float x = 10.5 endl
-    local float y = 2.5 endl
-    local float divFloat = x / y  endl
-    local float multFloat = x * y endl
-
-    | Operaciones relacionales
-    local bool mayor = a > b endl
-    local bool menor = a < b endl
-    local bool igual = a == b endl
-    local bool diferente = a != b endl
-    local bool mayorIgual = a >= c endl
-    local bool menorIgual = c <= a endl
-
-    | Operaciones lógicas
-    local bool andResult = ¿a > 0? @ ¿b > 0? endl
-    local bool orResult = ¿a > 100? ~ ¿b < 100? endl
-    local bool notResult = Σ ¿a == b? endl
-
-    | Operaciones unarias
-    local int negativo = -a endl
-    local int incremento = ++a endl
-    local int decremento = --b endl
-
-    | Expresiones complejas con paréntesis
-    local int complejo1 = ¿a + b? * ¿c - 2? endl
-    local bool complejo2 = ¿¿a > 0? @ ¿b < 100?? ~ ¿c == 5? endl
-
     show ¿ suma ? endl
     show ¿ divFloat ? endl
     show ¿ andResult ? endl
