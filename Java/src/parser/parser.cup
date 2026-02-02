@@ -13,6 +13,10 @@ parser code {:
     boolean oneMain = false;
     int errorCount = 0;
 
+    private String[] currentForLabels = null;
+    private int forIncrementCodeStart = -1;
+    private int forBlockCodeStart = -1;
+    private String savedIncrementCode = null;
     private int currentTemp = 0;
     private int frameSize = 0;
 
@@ -1226,7 +1230,14 @@ forStmt ::= FOR LPAREN
         symtab.enterScope();
         insideLoop++;
     :}
-    forVarDec:fvd expression:e1 ENDL expression:e2 RPAREN block:b
+    forVarDec:fvd
+    {:
+        String labelStart = newLabel("for_cond");
+        String labelEnd = newLabel("for_end");
+        currentForLabels = new String[]{labelStart, labelEnd};
+        gen(labelStart + ":");
+    :}
+    expression:e1 ENDL
     {:
         Nodo nodoE1 = (Nodo)e1;
         String tipoCondicion = nodoE1.getTipo();
@@ -1240,14 +1251,37 @@ forStmt ::= FOR LPAREN
                              "): La condición del for debe ser bool. Se encontró: " + tipoCondicion);
             errorCount++;
         }
+
+        String tempCondicion = nodoE1.getTemp();
+        gen("beqz " + tempCondicion + ", " + currentForLabels[1]);
+        forIncrementCodeStart = textSection.length();
+    :}
+    expression:e2 RPAREN
+    {:
+        int incrementCodeEnd = textSection.length();
+        String incrementCode = textSection.substring(forIncrementCodeStart, incrementCodeEnd);
+        textSection.delete(forIncrementCodeStart, incrementCodeEnd);
+        parser.savedIncrementCode = incrementCode;
+        forBlockCodeStart = textSection.length();
+    :}
+    block:b
+    {:
+        gen("# Increment");
+        textSection.append(savedIncrementCode);
+        gen("j " + currentForLabels[0]);
+        gen(currentForLabels[1] + ":");
+
         insideLoop--;
         symtab.exitScope();
+
+        currentForLabels = null;
+        savedIncrementCode = null;
 
         Nodo resultado = new Nodo("forStmt");
         resultado.addHijo(new Nodo("for"));
         resultado.addHijo(new Nodo("¿"));
         resultado.addHijo((Nodo)fvd);
-        resultado.addHijo(nodoE1);
+        resultado.addHijo((Nodo)e1);
         resultado.addHijo(new Nodo("endl"));
         resultado.addHijo((Nodo)e2);
         resultado.addHijo(new Nodo("?"));
